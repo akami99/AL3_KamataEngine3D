@@ -17,7 +17,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	GameScene* gameScene = new GameScene();
 	// ゲームシーンの初期化
 	gameScene->Initialize();
-
+	//  テストコミット
 	// メインループ
 	while (true) {
 		// エンジンの更新
