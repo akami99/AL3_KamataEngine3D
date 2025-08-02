@@ -1,6 +1,7 @@
 #include "GameScene.h"
 #include "MatrixGenerators.h"
 #include "EngineMathFunctions.h"
+#include "WorldTransform.h"
 
 using namespace KamataEngine;
 
@@ -16,6 +17,9 @@ void GameScene::Initialize() {
 	camera_.Initialize();
 	camera_.farZ = 1000.0f; // 遠くのオブジェクトまで描画するためにfarZを大きく設定
 
+	mapChipField_ = new MapChipField;
+	mapChipField_->LoadMapChipCsv("Resources/blocks.csv");
+
 	// 天球の生成
 	skydome_ = new Skydome();
 	// 天球の初期化
@@ -26,33 +30,8 @@ void GameScene::Initialize() {
 	// 自キャラの初期化
 	player_->Initialize(model_, &camera_);
 
-	// 要素数
-	const uint32_t kNumBlockVirtical = 10;
-	const uint32_t kNumBlockHorizontal = 20;
-	// ブロック1個分の横幅
-	const float kBlockWidth = 2.0f;
-	const float kBlockHeight = 2.0f;
-
-	// 要素数を変更する
-	// 列数を設定（縦方向のブロック数）
-	worldTransformBlocks_.resize(kNumBlockVirtical);
-	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
-		// 1列の要素数を設定（横方向のブロック数）
-		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
-	}
-
 	// ブロックの生成
-	for (uint32_t i = 0; i < kNumBlockVirtical; ++i) {
-		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
-			if ((i + j) % 4 == 0) // 斜めに穴あけ
-				continue;
-
-			worldTransformBlocks_[i][j] = new WorldTransform();
-			worldTransformBlocks_[i][j]->Initialize();
-			worldTransformBlocks_[i][j]->translation_.x = kBlockWidth * j;
-			worldTransformBlocks_[i][j]->translation_.y = kBlockHeight * i;
-		}
-	}
+	GenarateBlocks();
 
 	// デバッグカメラの生成
 	debugCamera_ = new DebugCamera(kWindowWidth, kWindowHeight);
@@ -65,6 +44,8 @@ GameScene::~GameScene() {
 	delete modelSkydome_;
 	// 自キャラの解放
 	delete player_;
+	// マップチップフィールドの解放
+	delete mapChipField_;
 	// 天球の解放
 	delete skydome_;
 
@@ -92,11 +73,8 @@ void GameScene::Update() {
 			if (!worldTransformBlock)
 				continue;
 
-			// アフィン変換行列の作成
-			worldTransformBlock->matWorld_ = MakeAffineMatrix(worldTransformBlock->scale_, worldTransformBlock->rotation_, worldTransformBlock->translation_);
-
 			// 定数バッファに転送する
-			worldTransformBlock->TransferMatrix();
+			UpdateWorldTransform(*worldTransformBlock);
 		}
 	}
 
@@ -152,4 +130,32 @@ void GameScene::Draw() {
 	
 	// 3Dモデル描画後処理
 	Model::PostDraw();
+}
+
+void GameScene::GenarateBlocks() {
+
+	// 要素数
+	uint32_t numBlockVirtical = mapChipField_->GetNumBlockVirtical();
+	uint32_t numBlockHorizontal = mapChipField_->GetNumBlockHorizontal();
+
+	// 要素数を変更する
+	// 列数を設定（縦方向のブロック数）
+	worldTransformBlocks_.resize(numBlockVirtical);
+	for (uint32_t i = 0; i < numBlockVirtical; ++i) {
+		// 1列の要素数を設定（横方向のブロック数）
+		worldTransformBlocks_[i].resize(numBlockHorizontal);
+	}
+
+	// ブロックの生成
+	for (uint32_t i = 0; i < numBlockVirtical; ++i) {
+		for (uint32_t j = 0; j < numBlockHorizontal; ++j) {
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+				WorldTransform* worldTransform = new WorldTransform();
+				worldTransform->Initialize();
+				worldTransformBlocks_[i][j] = worldTransform;
+				worldTransformBlocks_[i][j]->translation_ = mapChipField_->GetMapPositionByIndex(j, i);
+			}
+		}
+	}
+
 }

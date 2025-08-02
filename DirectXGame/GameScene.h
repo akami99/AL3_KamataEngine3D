@@ -2,6 +2,7 @@
 #include "KamataEngine.h"
 #include "Player.h"
 #include "Skydome.h"
+#include "MapChipField.h"
 #include <vector>
 
 static const uint32_t kWindowWidth = 1280;
@@ -22,6 +23,9 @@ private:
 
 	// 天球
 	Skydome* skydome_ = nullptr;
+
+	// マップチップフィールド
+	MapChipField* mapChipField_;
 
 	// 自キャラ
 	Player* player_ = nullptr;
@@ -45,4 +49,7 @@ public:
 
 	// 描画
 	void Draw();
+
+private:
+	void GenarateBlocks();
 };
