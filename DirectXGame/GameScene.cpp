@@ -1,35 +1,30 @@
 #include "GameScene.h"
+#include "MatrixGenerators.h"
+#include "EngineMathFunctions.h"
 
 using namespace KamataEngine;
 
-// 4x4行列の積
-Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2);
-
-// X軸回転行列
-Matrix4x4 MakeRotateXMatrix(float angle);
-// Y軸回転行列
-Matrix4x4 MakeRotateYMatrix(float angle);
-// Z軸回転行列
-Matrix4x4 MakeRotateZMatrix(float angle);
-
-// 3次元アフィン変換行列
-Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
-
 void GameScene::Initialize() {
 	// ファイル名を指定してテクスチャを読み込む
-	textureHandle_ = TextureManager::Load("./Resources/uvChecker.png");
-
+	
 	// 3Dモデルデータの生成
-	model_ = Model::Create();
-	modelBlock_ = Model::Create();
+	model_ = Model::CreateFromOBJ("player", true);
+	modelBlock_ = Model::CreateFromOBJ("cube", true);
+	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 
 	// カメラの初期化
 	camera_.Initialize();
+	camera_.farZ = 1000.0f; // 遠くのオブジェクトまで描画するためにfarZを大きく設定
+
+	// 天球の生成
+	skydome_ = new Skydome();
+	// 天球の初期化
+	skydome_->Initialize(modelSkydome_, &camera_);
 
 	// 自キャラの生成
 	player_ = new Player();
 	// 自キャラの初期化
-	player_->Initialize(model_, textureHandle_, &camera_);
+	player_->Initialize(model_, &camera_);
 
 	// 要素数
 	const uint32_t kNumBlockVirtical = 10;
@@ -67,8 +62,11 @@ GameScene::~GameScene() {
 	// 3Dモデルデータの解放
 	delete model_;
 	delete modelBlock_;
+	delete modelSkydome_;
 	// 自キャラの解放
 	delete player_;
+	// 天球の解放
+	delete skydome_;
 
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
@@ -82,6 +80,9 @@ GameScene::~GameScene() {
 }
 
 void GameScene::Update() {
+	// 天球の更新
+	skydome_->Update();
+
 	// 自キャラの更新
 	player_->Update();
 
@@ -132,8 +133,11 @@ void GameScene::Draw() {
 	// 3Dモデル描画前処理
 	Model::PreDraw(dxCommon->GetCommandList());
 
+	// 天球の描画
+	skydome_->Draw();
+
 	// 自キャラの描画
-	// player_->Draw();
+	player_->Draw();
 
 	// ブロックの描画
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -145,78 +149,7 @@ void GameScene::Draw() {
 			modelBlock_->Draw(*worldTransformBlock, camera_);
 		}
 	}
-
+	
 	// 3Dモデル描画後処理
 	Model::PostDraw();
-}
-
-// 4x4行列の積
-Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
-	Matrix4x4 result;
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			result.m[i][j] = 0;
-			for (int k = 0; k < 4; k++) {
-				result.m[i][j] += m1.m[i][k] * m2.m[k][j];
-			}
-		}
-	}
-	return result;
-}
-
-// X軸回転行列
-Matrix4x4 MakeRotateXMatrix(float angle) {
-	Matrix4x4 result = {};
-	result.m[0][0] = 1.0f;
-	result.m[3][3] = 1.0f;
-	result.m[1][1] = std::cos(angle);
-	result.m[1][2] = std::sin(angle);
-	result.m[2][1] = -std::sin(angle);
-	result.m[2][2] = std::cos(angle);
-	return result;
-}
-// Y軸回転行列
-Matrix4x4 MakeRotateYMatrix(float angle) {
-	Matrix4x4 result = {};
-	result.m[1][1] = 1.0f;
-	result.m[3][3] = 1.0f;
-	result.m[0][0] = std::cos(angle);
-	result.m[0][2] = -std::sin(angle);
-	result.m[2][0] = std::sin(angle);
-	result.m[2][2] = std::cos(angle);
-	return result;
-}
-// Z軸回転行列
-Matrix4x4 MakeRotateZMatrix(float angle) {
-	Matrix4x4 result = {};
-	result.m[2][2] = 1.0f;
-	result.m[3][3] = 1.0f;
-	result.m[0][0] = std::cos(angle);
-	result.m[0][1] = std::sin(angle);
-	result.m[1][0] = -std::sin(angle);
-	result.m[1][1] = std::cos(angle);
-	return result;
-}
-
-// 3次元アフィン変換行列
-Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
-	Matrix4x4 result = {};
-	// X,Y,Z軸の回転をまとめる
-	Matrix4x4 rotateXYZ = Multiply(MakeRotateXMatrix(rotate.x), Multiply(MakeRotateYMatrix(rotate.y), MakeRotateZMatrix(rotate.z)));
-
-	result.m[0][0] = scale.x * rotateXYZ.m[0][0];
-	result.m[0][1] = scale.x * rotateXYZ.m[0][1];
-	result.m[0][2] = scale.x * rotateXYZ.m[0][2];
-	result.m[1][0] = scale.y * rotateXYZ.m[1][0];
-	result.m[1][1] = scale.y * rotateXYZ.m[1][1];
-	result.m[1][2] = scale.y * rotateXYZ.m[1][2];
-	result.m[2][0] = scale.z * rotateXYZ.m[2][0];
-	result.m[2][1] = scale.z * rotateXYZ.m[2][1];
-	result.m[2][2] = scale.z * rotateXYZ.m[2][2];
-	result.m[3][0] = translate.x;
-	result.m[3][1] = translate.y;
-	result.m[3][2] = translate.z;
-	result.m[3][3] = 1.0f;
-
-	return result;
 }

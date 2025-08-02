@@ -1,9 +1,8 @@
-#include "Player.h"
-#include <cassert>
+#include "Skydome.h"
 
 using namespace KamataEngine;
 
-void Player::Initialize(Model* model, Camera* camera) {
+void Skydome::Initialize(Model* model, Camera* camera) {
 	// NULLポインタチェック
 	assert(model);
 
@@ -13,14 +12,16 @@ void Player::Initialize(Model* model, Camera* camera) {
 
 	// ワールド変換の初期化
 	worldTransform_.Initialize();
-};
 
-void Player::Update() {
+	// 初期位置の設定
+	worldTransform_.translation_ = { 0.0f, 0.0f, 0.0f };
+}
+
+void Skydome::Update() {
 	// 行列を定数バッファに転送
 	worldTransform_.TransferMatrix();
-};
+}
 
-void Player::Draw() {
-	// 3Dモデルを描画
+void Skydome::Draw() {
 	model_->Draw(worldTransform_, *camera_);
-};
+}

@@ -2,10 +2,7 @@
 
 #include "KamataEngine.h"
 
-/// <summary>
-/// 自キャラ
-/// </summary>
-class Player {
+class Skydome {
 private:
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransform_;
@@ -18,18 +15,15 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	/// <param name="model">モデル</param>
-	/// <param name="textureHandle">テクスチャハンドル</param>
-	/// <param name="camera">カメラ</param>
 	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera);
 
 	/// <summary>
 	/// 更新
-	/// <summary>
+	/// </summary>
 	void Update();
 
 	/// <summary>
 	/// 描画
-	/// <summary>
+	/// </summary>
 	void Draw();
 };

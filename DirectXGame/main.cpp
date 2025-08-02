@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include "KamataEngine.h"
+//#include "KamataEngine.h"
 #include "GameScene.h"
 
 using namespace KamataEngine;
