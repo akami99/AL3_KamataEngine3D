@@ -55,6 +55,51 @@ KamataEngine::Vector3 Cross(const KamataEngine::Vector3& v1, const KamataEngine:
 /// <returns>長さ（ノルム）</returns>
 float Length(const KamataEngine::Vector3& v);
 
+// 線形補間
+
+/// <summary>
+/// スムーズステップ関数
+/// </summary>
+/// <param name="t">補間係数</param>
+/// <returns>スムーズステップ</returns>
+float Smoothstep(float t);
+
+/// <summary>
+/// Lerp関数
+/// </summary>
+/// <param name="v1">始点</param>
+/// <param name="v2">終点</param>
+/// <param name="t">補間係数</param>
+/// <returns>Lerp</returns>
+KamataEngine::Vector3 Lerp(const KamataEngine::Vector3& v1, const KamataEngine::Vector3& v2, float t);
+
+/// <summary>
+/// float型のLerp関数
+/// </summary>
+/// <param name="v1">始点</param>
+/// <param name="v2">終点</param>
+/// <param name="t">補間係数</param>
+/// <returns>Lerp</returns>
+float Lerp(float v1, float v2, float t);
+
+/// <summary>
+/// イーズインアウトを適用したLerp関数
+/// </summary>
+/// <param name="v1">始点</param>
+/// <param name="v2">終点</param>
+/// <param name="t">補間係数</param>
+/// <returns>イーズインアウトを適用したLerp</returns>
+KamataEngine::Vector3 EaseInOutLerp(const KamataEngine::Vector3& v1, const KamataEngine::Vector3& v2, float t);
+
+/// <summary>
+/// イーズインアウトを適用したfloat型のLerp関数
+/// </summary>
+/// <param name="v1">始点</param>
+/// <param name="v2">終点</param>
+/// <param name="t">補間係数</param>
+/// <returns>イーズインアウトを適用したfloat型のLerp</returns>
+float EaseInOutLerpFloat(float v1, float v2, float t);
+
 /// <summary>
 /// 正規化
 /// </summary>

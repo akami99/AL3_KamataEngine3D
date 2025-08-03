@@ -56,6 +56,41 @@ float Length(const Vector3& v) {
 	return result;
 }
 
+// 線形補間
+
+// スムーズステップ関数
+float Smoothstep(float t) {
+	t = std::fmax(0.0f, std::fmin(1.0f, t));
+	return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+// 線形補間関数
+Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t) {
+	Vector3 result{};
+	result.x = (1 - t) * v1.x + t * v2.x;
+	result.y = (1 - t) * v1.y + t * v2.y;
+	result.z = (1 - t) * v1.z + t * v2.z;
+	return result;
+}
+
+// float型のLerp関数
+float Lerp(float v1, float v2, float t) {
+	float result = (1 - t) * v1 + t * v2;
+	return result;
+}
+
+// EaseInOut関数
+Vector3 EaseInOutLerp(const Vector3& v1, const Vector3& v2, float t) {
+	float easedT = Smoothstep(t); // t をイーズインアウト用に変換
+	return Lerp(v1, v2, easedT);
+}
+
+// イーズインアウトを適用したfloat型のLerp関数
+float EaseInOutLerpFloat(float v1, float v2, float t) {
+	float easedT = Smoothstep(t);
+	return Lerp(v1, v2, easedT);
+}
+
 // 正規化
 Vector3 Normalize(const Vector3& v) {
 	Vector3 result;

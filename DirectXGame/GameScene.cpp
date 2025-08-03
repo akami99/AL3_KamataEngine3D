@@ -27,8 +27,10 @@ void GameScene::Initialize() {
 
 	// 自キャラの生成
 	player_ = new Player();
+	// 座標をマップチップ番号で指定
+	Vector3 playerPosition = mapChipField_->GetMapPositionByIndex(1, 18);
 	// 自キャラの初期化
-	player_->Initialize(model_, &camera_);
+	player_->Initialize(model_, &camera_, playerPosition);
 
 	// ブロックの生成
 	GenarateBlocks();
