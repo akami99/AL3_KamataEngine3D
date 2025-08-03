@@ -32,6 +32,16 @@ void GameScene::Initialize() {
 	// 自キャラの初期化
 	player_->Initialize(model_, &camera_, playerPosition);
 
+	// カメラコントローラーの初期化
+	// 生成
+	cameraController_ = new CameraController(camera_);
+	// 初期化
+	cameraController_->Initialize();
+	// 追従対象をセット
+	cameraController_->SetTarget(player_);
+	// リセット（瞬間合わせ）
+	cameraController_->Reset();
+
 	// ブロックの生成
 	GenarateBlocks();
 
@@ -68,6 +78,8 @@ void GameScene::Update() {
 
 	// 自キャラの更新
 	player_->Update();
+	// 追従カメラの更新
+	cameraController_->Update();
 
 	// ブロックの更新
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {

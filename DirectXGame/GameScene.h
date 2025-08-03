@@ -3,6 +3,7 @@
 #include "Player.h"
 #include "Skydome.h"
 #include "MapChipField.h"
+#include "CameraController.h"
 #include <vector>
 
 static const uint32_t kWindowWidth = 1280;
@@ -31,6 +32,8 @@ private:
 	Player* player_ = nullptr;
 
 	std::vector<std::vector<KamataEngine::WorldTransform*>> worldTransformBlocks_;
+
+	CameraController* cameraController_ = nullptr;
 
 	// デバッグカメラ有効
 	bool isDebugCameraActive_ = false;

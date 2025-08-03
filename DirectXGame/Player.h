@@ -27,7 +27,7 @@ private:
 	// 減速度
 	static inline const float kAttenuation = 0.08f;
 	// 移動速度の上限
-	static inline const float kLimitRunSpeed = 0.2f;
+	static inline const float kLimitRunSpeed = 0.6f;
 	// 移動方向
 	LRDirection lrDirection_ = LRDirection::kRight;
 
@@ -66,4 +66,12 @@ public:
 	/// 描画
 	/// <summary>
 	void Draw();
+
+	const KamataEngine::WorldTransform& GetWorldTransform() const {
+		return worldTransform_;
+	}
+
+	const KamataEngine::Vector3& GetVelocity() const {
+		return velocity_;
+	}
 };
