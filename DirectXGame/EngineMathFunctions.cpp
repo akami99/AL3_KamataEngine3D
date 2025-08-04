@@ -136,6 +136,16 @@ bool IsCollision(const Sphere& sphere, const Plane& plane) {
 	return distance <= sphere.radius;
 }
 
+bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
+	// AABBの衝突判定は、各軸での重なりを確認する
+	if (aabb1.max.x >= aabb2.min.x && aabb1.min.x <= aabb2.max.x &&
+		aabb1.max.y >= aabb2.min.y && aabb1.min.y <= aabb2.max.y &&
+		aabb1.max.z >= aabb2.min.z && aabb1.min.z <= aabb2.max.z) {
+		return true; // 衝突している
+	}
+	return false; // 衝突していない
+}
+
 // ベクトルを法線方向に投影する関数
 Vector3 Project(const Vector3& vector, const Vector3& normal) {
 	// ベクトルを法線方向に投影する

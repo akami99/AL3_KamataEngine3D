@@ -34,7 +34,9 @@ private:
 	Player* player_ = nullptr;
 
 	// 敵キャラ
-	Enemy* enemy_ = nullptr;
+	std::list<Enemy*> enemies_;
+	// 敵の数
+	static inline const int32_t kEnemyNum = 3;
 
 	std::vector<std::vector<KamataEngine::WorldTransform*>> worldTransformBlocks_;
 
@@ -60,4 +62,7 @@ public:
 
 private:
 	void GenarateBlocks();
+
+	// 全ての当たり判定を行う
+	void CheckAllCollisions();
 };

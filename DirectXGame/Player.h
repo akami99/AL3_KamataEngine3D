@@ -1,6 +1,9 @@
 #pragma once
 
 #include "KamataEngine.h"
+#include "EngineMath.h"
+
+class Enemy;
 
 class MapChipField;
 
@@ -101,6 +104,9 @@ public:
 	/// <summary>
 	void Draw();
 
+	// 衝突応答
+	void OnCollision(const Enemy* enemy);
+
 	const KamataEngine::WorldTransform& GetWorldTransform() const {
 		return worldTransform_;
 	}
@@ -108,6 +114,12 @@ public:
 	const KamataEngine::Vector3& GetVelocity() const {
 		return velocity_;
 	}
+
+	// ワールド座標を取得
+	KamataEngine::Vector3 GetWorldPosition();
+
+	// AABBを取得
+	AABB GetAABB();
 
 	void SetMapChipField(MapChipField* mapChipField) {
 		mapChipField_ = mapChipField;
@@ -189,3 +201,4 @@ private:
 	/// <param name="info">衝突情報を含む CollisionMapinfo 型の参照</param>
 	void OnGroundSwitch(const CollisionMapinfo& info);
 };
+

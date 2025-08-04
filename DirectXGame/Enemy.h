@@ -1,6 +1,9 @@
 #pragma once
 
 #include "KamataEngine.h"
+#include "EngineMath.h"
+
+class Player;
 
 class Enemy {
 private:
@@ -16,6 +19,10 @@ private:
 	KamataEngine::Model* model_ = nullptr;
 	// カメラ
 	KamataEngine::Camera* camera_ = nullptr;
+
+	// キャラクターの当たり判定サイズ(実際に使う際に調整する部分)
+	static inline const float kWidth = 0.9f;
+	static inline const float kHeight = 0.9f;
 
 	// 歩行の速さ
 	static inline const float kWalkSpeed = 0.01f;
@@ -59,5 +66,13 @@ public:
 	/// <summary>
 	void Draw();
 
+	// 衝突応答
+	void OnCollision(const Player* player);
+
+	// ワールド座標を取得
+	KamataEngine::Vector3 GetWorldPosition();
+
+	// AABBを取得
+	AABB GetAABB();
 };
 
