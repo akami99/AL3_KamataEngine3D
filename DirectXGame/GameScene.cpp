@@ -10,6 +10,7 @@ void GameScene::Initialize() {
 	
 	// 3Dモデルデータの生成
 	model_ = Model::CreateFromOBJ("player", true);
+	modelParticle_ = Model::CreateFromOBJ("particle", true);
 	modelBlock_ = Model::CreateFromOBJ("cube", true);
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 	modelEnemy_ = Model::CreateFromOBJ("enemy", true);
@@ -31,9 +32,13 @@ void GameScene::Initialize() {
 	// 自キャラの生成
 	player_ = new Player();
 	// 座標をマップチップ番号で指定
-	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(4, 18);
 	// 自キャラの初期化
 	player_->Initialize(model_, &camera_, playerPosition);
+
+	// 仮の生成処理。後で消す。
+	deathParticles_ = new DeathParticles;
+	deathParticles_->Initialize(modelParticle_, &camera_, playerPosition);
 
 	// 敵キャラの生成
 	for (int32_t i = 0; i < kEnemyNum; ++i) {
@@ -68,11 +73,13 @@ void GameScene::Initialize() {
 GameScene::~GameScene() {
 	// 3Dモデルデータの解放
 	delete model_;
+	delete modelParticle_;
 	delete modelBlock_;
 	delete modelSkydome_;
 	delete modelEnemy_;
 	// 自キャラの解放
 	delete player_;
+	delete deathParticles_;
 	// 敵キャラの解放
 	for (Enemy* enemy : enemies_) {
 		// newで確保したメモリをdeleteで解放
@@ -103,6 +110,10 @@ void GameScene::Update() {
 
 	// 自キャラの更新
 	player_->Update();
+
+	if (deathParticles_ != nullptr) {
+		deathParticles_->Update();
+	}
 
 	// 敵キャラの更新
 	for (Enemy* enemy : enemies_) {
@@ -165,6 +176,10 @@ void GameScene::Draw() {
 
 	// 自キャラの描画
 	player_->Draw();
+
+	if (deathParticles_ != nullptr) {
+		deathParticles_->Draw();
+	}
 
 	// 敵キャラの描画
 	for (Enemy* enemy : enemies_) {

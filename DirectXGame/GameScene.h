@@ -1,6 +1,7 @@
 #pragma once
 #include "KamataEngine.h"
 #include "Player.h"
+#include "DeathParticles.h"
 #include "Enemy.h"
 #include "Skydome.h"
 #include "MapChipField.h"
@@ -17,6 +18,7 @@ private:
 
 	// 3Dモデルデータ
 	KamataEngine::Model* model_ = nullptr;
+	KamataEngine::Model* modelParticle_ = nullptr;
 	KamataEngine::Model* modelBlock_ = nullptr;
 	KamataEngine::Model* modelSkydome_ = nullptr;
 	KamataEngine::Model* modelEnemy_ = nullptr;
@@ -32,6 +34,8 @@ private:
 
 	// 自キャラ
 	Player* player_ = nullptr;
+
+	DeathParticles* deathParticles_ = nullptr;
 
 	// 敵キャラ
 	std::list<Enemy*> enemies_;

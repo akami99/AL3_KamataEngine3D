@@ -107,6 +107,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="DeathParticles.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="EngineMathFunctions.cpp" />
     <ClCompile Include="GameScene.cpp" />
@@ -194,6 +195,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CameraController.h" />
+    <ClInclude Include="DeathParticles.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="EngineMath.h" />
     <ClInclude Include="EngineMathFunctions.h" />
