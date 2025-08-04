@@ -2,6 +2,8 @@
 
 #include "KamataEngine.h"
 
+class MapChipField;
+
 /// <summary>
 /// 自キャラ
 /// </summary>
@@ -13,12 +15,33 @@ private:
 		kLeft,
 	};
 
+	// 角
+	enum class Corner {
+		kRightBottom,    // 右下
+		kLeftBottom,     // 左下
+		kRightTop,       // 右上
+		kLeftTop,        // 左上
+
+		kNumCorner       // 要素数
+
+	};
+
+	// マップとの当たり判定情報
+	struct CollisionMapinfo {
+		bool onCollisionCeiling_ = false; // 天井に衝突しているか
+		bool onCollisionFloor_ = false;   // 床に衝突しているか(着地しているか)
+		bool onCollisionWall_ = false;    // 左側に衝突しているか
+		KamataEngine::Vector3 moveAmount_;      // 移動量
+	};
+
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransform_;
 	// モデル
 	KamataEngine::Model* model_ = nullptr;
 	// カメラ
 	KamataEngine::Camera* camera_ = nullptr;
+	// マップチップによるフィールド
+	MapChipField* mapChipField_ = nullptr;
 
 	// 速度
 	KamataEngine::Vector3 velocity_ = {};
@@ -46,7 +69,13 @@ private:
 	// 最大落下速度（下方向）
 	static inline const float kLimitFallSpeed = 1.0f;
 	// ジャンプ初速（上方向）
-	static inline const float kJumpAcceleration = 0.6f;
+	static inline const float kJumpAcceleration = 0.4f;
+
+	// キャラクターの当たり判定サイズ(実際に使う際に調整する部分)
+	static inline const float kWidth = 0.8f;
+	static inline const float kHeight = 0.8f;
+
+	static inline const float kBlank = 0.01f; // 当たり判定のブランク値
 
 public:
 	/// <summary>
@@ -74,4 +103,72 @@ public:
 	const KamataEngine::Vector3& GetVelocity() const {
 		return velocity_;
 	}
+
+	void SetMapChipField(MapChipField* mapChipField) {
+		mapChipField_ = mapChipField;
+	}
+
+private:
+	/// <summary>
+	/// 移動処理
+	/// </summary>
+	void Move();
+
+	/// <summary>
+	/// マップの衝突情報をチェック
+	/// </summary>
+	/// <param name="info">衝突判定に使用するマップ情報への参照</param>
+	void MapCollisionCheck(CollisionMapinfo& info);
+
+	/// <summary>
+	/// 上方向のマップ衝突判定
+	/// </summary>
+	/// <param name="info">衝突判定に使用するCollisionMapinfo構造体への参照</param>
+	void MapCollisionCheckUp(CollisionMapinfo& info);
+
+	/*/// <summary>
+	/// 下方向のマップ衝突判定
+	/// </summary>
+	/// <param name="info">衝突判定に使用するCollisionMapinfo構造体への参照</param>
+	void MapCollisionCheckDown(CollisionMapinfo& info);
+
+	/// <summary>
+	/// 右方向のマップ衝突判定
+	/// </summary>
+	/// <param name="info">衝突判定に使用するCollisionMapinfo構造体への参照</param>
+	void MapCollisionCheckRight(CollisionMapinfo& info);
+
+	/// <summary>
+	/// 左方向のマップ衝突判定
+	/// </summary>
+	/// <param name="info">衝突判定に使用するCollisionMapinfo構造体への参照</param>
+	void MapCollisionCheckLeft(CollisionMapinfo& info);*/
+
+	/// <summary>
+	/// 中心座標とコーナー種別から、指定されたコーナーの座標を計算
+	/// </summary>
+	/// <param name="center">基準となる中心の座標（KamataEngine::Vector3 型）</param>
+	/// <param name="corner">取得したいコーナーの種類を指定する Corner 列挙型</param>
+	/// <returns>指定されたコーナーの座標（KamataEngine::Vector3 型）</returns>
+	KamataEngine::Vector3 CornerPosition(KamataEngine::Vector3 center, Corner corner);
+
+	/// <summary>
+	/// 指定された基準位置から、すべてのコーナーの位置を計算して返す
+	/// </summary>
+	/// <param name="basePosition">コーナー位置の計算に使用する基準となる3次元ベクトル</param>
+	/// <returns>各コーナーの位置を格納した std::array<KamataEngine::Vector3, static_cast<uint32_t>(Corner::kNumCorner)></returns>
+	std::array<KamataEngine::Vector3, static_cast<uint32_t>(Corner::kNumCorner)>
+		CalculateCornerPositions(const KamataEngine::Vector3& basePosition);
+
+	/// <summary>
+	/// 衝突結果を適用
+	/// </summary>
+	/// <param name="info">衝突情報を含む CollisionMapinfo 型の参照</param>
+	void ApplyCollisionResult(const CollisionMapinfo& info);
+
+	/// <summary>
+	/// 天井に接触している際の処理
+	/// </summary>
+	/// <param name="info">衝突情報を含む CollisionMapinfo 型の参照</param>
+	void OnCollisionCeiling(const CollisionMapinfo& info);
 };
