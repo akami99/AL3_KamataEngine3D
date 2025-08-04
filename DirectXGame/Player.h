@@ -29,7 +29,7 @@ private:
 	// マップとの当たり判定情報
 	struct CollisionMapinfo {
 		bool onCollisionCeiling_ = false; // 天井に衝突しているか
-		bool onCollisionFloor_ = false;   // 床に衝突しているか(着地しているか)
+		bool onCollisionGround_ = false;   // 床に衝突しているか(着地しているか)
 		bool onCollisionWall_ = false;    // 左側に衝突しているか
 		KamataEngine::Vector3 moveAmount_;      // 移動量
 	};
@@ -46,11 +46,11 @@ private:
 	// 速度
 	KamataEngine::Vector3 velocity_ = {};
 	// 加速度
-	static inline const float kAcceleration = 0.01f;
+	static inline const float kAcceleration = 0.002f;
 	// 減速度
 	static inline const float kAttenuation = 0.08f;
 	// 移動速度の上限
-	static inline const float kLimitRunSpeed = 0.6f;
+	static inline const float kLimitRunSpeed = 0.2f;
 	// 移動方向
 	LRDirection lrDirection_ = LRDirection::kRight;
 
@@ -65,17 +65,22 @@ private:
 	bool onGround_ = true;
 
 	// 重力加速度（下方向）
-	static inline const float kGravityAcceleration = 0.045f;
+	static inline const float kGravityAcceleration = 0.004f;
 	// 最大落下速度（下方向）
-	static inline const float kLimitFallSpeed = 1.0f;
+	static inline const float kLimitFallSpeed = 0.08f;
 	// ジャンプ初速（上方向）
-	static inline const float kJumpAcceleration = 0.4f;
+	static inline const float kJumpAcceleration = 0.12f;
 
 	// キャラクターの当たり判定サイズ(実際に使う際に調整する部分)
-	static inline const float kWidth = 0.8f;
-	static inline const float kHeight = 0.8f;
+	static inline const float kWidth = 0.9f;
+	static inline const float kHeight = 0.9f;
 
 	static inline const float kBlank = 0.01f; // 当たり判定のブランク値
+	static inline const float kCollisionOffsetBottom = 0.01f;
+
+	// 着地時の速度減衰率
+	static inline const float kAttenuationLanding = 0.4f;
+	static inline const float kAttenuationWall = 1.0f;
 
 public:
 	/// <summary>
@@ -126,7 +131,7 @@ private:
 	/// <param name="info">衝突判定に使用するCollisionMapinfo構造体への参照</param>
 	void MapCollisionCheckUp(CollisionMapinfo& info);
 
-	/*/// <summary>
+	/// <summary>
 	/// 下方向のマップ衝突判定
 	/// </summary>
 	/// <param name="info">衝突判定に使用するCollisionMapinfo構造体への参照</param>
@@ -142,7 +147,7 @@ private:
 	/// 左方向のマップ衝突判定
 	/// </summary>
 	/// <param name="info">衝突判定に使用するCollisionMapinfo構造体への参照</param>
-	void MapCollisionCheckLeft(CollisionMapinfo& info);*/
+	void MapCollisionCheckLeft(CollisionMapinfo& info);
 
 	/// <summary>
 	/// 中心座標とコーナー種別から、指定されたコーナーの座標を計算
@@ -171,4 +176,16 @@ private:
 	/// </summary>
 	/// <param name="info">衝突情報を含む CollisionMapinfo 型の参照</param>
 	void OnCollisionCeiling(const CollisionMapinfo& info);
+
+	/// <summary>
+	/// 壁に接触している際の処理
+	/// </summary>
+	/// <param name="info">衝突情報を含む CollisionMapinfo 型の参照</param>
+	void OnCollisionWall(const CollisionMapinfo& info);
+
+	/// <summary>
+	/// 接地状態の切り替え処理
+	/// </summary>
+	/// <param name="info">衝突情報を含む CollisionMapinfo 型の参照</param>
+	void OnGroundSwitch(const CollisionMapinfo& info);
 };
