@@ -12,6 +12,7 @@ void GameScene::Initialize() {
 	model_ = Model::CreateFromOBJ("player", true);
 	modelBlock_ = Model::CreateFromOBJ("cube", true);
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
+	modelEnemy_ = Model::CreateFromOBJ("enemy", true);
 
 	// カメラの初期化
 	camera_.Initialize();
@@ -33,6 +34,13 @@ void GameScene::Initialize() {
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
 	// 自キャラの初期化
 	player_->Initialize(model_, &camera_, playerPosition);
+
+	// 敵キャラの生成
+	enemy_ = new Enemy();
+	// 敵キャラの初期化（座標をマップチップ番号で指定）
+	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(10, 18);
+	enemy_->Initialize(modelEnemy_, &camera_, enemyPosition);
+
 	// マップチップフィールドの参照をセット
 	player_->SetMapChipField(mapChipField_);
 
@@ -58,8 +66,13 @@ GameScene::~GameScene() {
 	delete model_;
 	delete modelBlock_;
 	delete modelSkydome_;
+	delete modelEnemy_;
 	// 自キャラの解放
 	delete player_;
+	// 敵キャラの解放
+	if (enemy_ != nullptr) {
+		delete enemy_;
+	}
 	// マップチップフィールドの解放
 	delete mapChipField_;
 	// 天球の解放
@@ -82,6 +95,12 @@ void GameScene::Update() {
 
 	// 自キャラの更新
 	player_->Update();
+
+	// 敵キャラの更新
+	if (enemy_ != nullptr) {
+		enemy_->Update();
+	}
+
 	// 追従カメラの更新
 	cameraController_->Update();
 
@@ -134,6 +153,11 @@ void GameScene::Draw() {
 
 	// 自キャラの描画
 	player_->Draw();
+
+	// 敵キャラの描画
+	if (enemy_ != nullptr) {
+		enemy_->Draw();
+	}
 
 	// ブロックの描画
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
