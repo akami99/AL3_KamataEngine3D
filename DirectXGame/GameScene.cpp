@@ -67,6 +67,14 @@ void GameScene::Initialize() {
 
 	// デバッグカメラの生成
 	debugCamera_ = new DebugCamera(kWindowWidth, kWindowHeight);
+
+	// フェード用オブジェクトの生成と初期化
+	fade_ = new Fade();
+	fade_->Initialize();
+	fade_->Start(Fade::Status::FadeIn, kFadeTime); // フェードインから始める
+
+	// 初期フェーズはフェードイン
+	phase_ = Phase::kFadeIn;
 }
 
 GameScene::~GameScene() {
@@ -101,11 +109,19 @@ GameScene::~GameScene() {
 
 	// デバッグカメラの解放
 	delete debugCamera_;
+
+	delete fade_;
 }
 
 void GameScene::Update() {
 
 	switch (phase_) {
+	case Phase::kFadeIn:
+		fade_->Update(); // フェードの更新
+		if (fade_->IsFinished()) { // フェードインが終了したら
+			phase_ = Phase::kPlay;
+		}
+		break;
 	case Phase::kPlay:
 		// 天球の更新
 		skydome_->Update();
@@ -213,10 +229,19 @@ break;
 			}
 		}
 
-		if (deathParticles_&& deathParticles_->IsFinished()){
-			finished_ = true;
+		if (deathParticles_ && deathParticles_->IsFinished()) {
+			// 死亡演出が終わったらフェードアウト開始
+			fade_->Start(Fade::Status::FadeOut, kFadeTime);
+			phase_ = Phase::kFadeOut;
 		}
 
+		break;
+
+	case Phase::kFadeOut:
+		fade_->Update();
+		if (fade_->IsFinished()) { // フェードアウトが終了したら
+			finished_ = true;
+		}
 		break;
 	}
 }
@@ -258,6 +283,11 @@ void GameScene::Draw() {
 
 	// 3Dモデル描画後処理
 	Model::PostDraw();
+
+	// フェードイン中/フェードアウト中はフェードの描画を行う
+	if (phase_ == Phase::kFadeIn || phase_ == Phase::kFadeOut) {
+		fade_->Draw();
+	}
 }
 
 void GameScene::GenarateBlocks() {

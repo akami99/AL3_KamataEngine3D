@@ -22,32 +22,59 @@ void TitleScene::Initialize() {
 	camera_.Initialize();
 	camera_.farZ = 100.0f; // 遠くのオブジェクトまで描画するためにfarZを大きく設定
 	camera_.translation_.z = -10.0f;
+
+	fade_ = new Fade();
+	fade_->Initialize();
+	fade_->Start(Fade::Status::FadeIn, kFadeTime);
 }
 
 TitleScene::~TitleScene() {
 	// 3Dモデルデータの解放
 	delete model_;
 	delete modelTitleName_;
+	delete fade_;
 }
 
 void TitleScene::Update() {
-	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-		finished_ = true;
-	}
-	counter_ += returnT_ * (1.0f / 60.0f);
-	if (counter_ >= kDuration || counter_ <= 0.0f) {
-		returnT_ *= -1.0f;
-	}
+	float t = 0.0f;
+	switch (phase_) {
+	case Phase::kFadeIn: // フェードインフェーズ
+		fade_->Update();
+		if (fade_->IsFinished()) {
+			// フェードインが終了したらメインフェーズに切り替え
+			phase_ = Phase::kMain;
+			fade_->Initialize(); // フェードの値をリセット
+		}
+		break;
 
-	// パーティクルの寿命に対する進行度を0.0f〜1.0fで計算
-	float t = counter_ / kDuration;
+	case Phase::kMain: // メインフェーズ
+		// メイン部ではスペースキーを押したらフェードアウトを開始する
+		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+			fade_->Start(Fade::Status::FadeOut, kFadeTime); // フェードアウト開始
+			phase_ = Phase::kFadeOut;
+		}
 
-	worldTransformTitle_.translation_.y = std::clamp((1.0f - t), 0.0f, 1.0f) + kOriginePos;
+		// タイトルアニメーションなど、メインの更新処理
+		counter_ += returnT_ * (1.0f / 60.0f);
+		if (counter_ >= kDuration || counter_ <= 0.0f) {
+			returnT_ *= -1.0f;
+		}
+		t = counter_ / kDuration;
+		worldTransformTitle_.translation_.y = std::clamp((1.0f - t), 0.0f, 1.0f) + kOriginePos;
+
+		break;
+
+	case Phase::kFadeOut: // フェードアウトフェーズ
+		fade_->Update();
+		if (fade_->IsFinished()) {
+			// フェードアウトが終了したらタイトルシーンを終了する
+			finished_ = true;
+		}
+		break;
+	}
 
 	UpdateWorldTransform(worldTransform_);
 	UpdateWorldTransform(worldTransformTitle_);
-
-	// ビュープロジェクション行列の転送
 	camera_.UpdateMatrix();
 }
 
@@ -64,6 +91,13 @@ void TitleScene::Draw() {
 
 	modelTitleName_->Draw(worldTransformTitle_, camera_);
 
+	
 	// 3Dモデル描画後処理
 	Model::PostDraw();
+	// フェードイン中/フェードアウト中はフェードの描画を行う
+	if (phase_ == Phase::kFadeIn || phase_ == Phase::kFadeOut) {
+		Sprite::PreDraw(dxCommon->GetCommandList());
+		fade_->Draw();
+		Sprite::PostDraw();
+	}
 }

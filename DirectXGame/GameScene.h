@@ -4,6 +4,7 @@
 #include "DeathParticles.h"
 #include "Enemy.h"
 #include "Skydome.h"
+#include "Fade.h"
 #include "MapChipField.h"
 #include "CameraController.h"
 #include <vector>
@@ -16,12 +17,18 @@ class GameScene {
 private:
 	// ゲームのフェーズ（型）
 	enum class Phase {
-		kPlay,  // ゲームプレイ
-		kDeath, // デス演出
+		kFadeIn, // フェードイン
+		kPlay,   // ゲームプレイ
+		kDeath,  // デス演出
+		kFadeOut,// フェードアウト
 	};
 
 	// ゲームの現在フェーズ（変数）
-	Phase phase_;
+	Phase phase_ = Phase::kFadeIn;
+
+	// フェード用オブジェクト
+	Fade* fade_ = nullptr;
+	static inline const float kFadeTime = 2.0f;
 
 	// テクスチャハンドル
 

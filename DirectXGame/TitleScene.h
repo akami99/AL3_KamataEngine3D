@@ -1,12 +1,23 @@
 #pragma once
 
 #include "KamataEngine.h"
+#include "Fade.h"
 
 /// <summary>
 /// タイトルシーン
 /// </summary>
 class TitleScene {
 private:
+	// シーンのフェーズ
+	enum class Phase {
+		kFadeIn,  // フェードイン
+		kMain,    // メイン部
+		kFadeOut, // フェードアウト
+	};
+
+	// 現在のフェーズ
+	Phase phase_ = Phase::kFadeIn;
+
 	// 3Dモデルデータ
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Model* modelTitleName_ = nullptr;
@@ -18,6 +29,9 @@ private:
 	static inline const float kDuration = 1.0f;
 	float returnT_ = 1.0f;
 	static inline const float kOriginePos = 1.4f;
+
+	Fade* fade_ = nullptr;
+	static inline const float kFadeTime = 2.0f;
 
 	// カメラ
 	KamataEngine::Camera camera_;
