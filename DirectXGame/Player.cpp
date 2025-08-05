@@ -75,6 +75,7 @@ void Player::Draw() {
 
 void Player::OnCollision(const Enemy* enemy) {
 	(void)enemy;
+	isDead_ = true;
 }
 
 KamataEngine::Vector3 Player::GetWorldPosition() {

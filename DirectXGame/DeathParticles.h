@@ -55,6 +55,9 @@ public:
 	/// <summary>
 	void Draw();
 
-
+	// デスフラグのgetter
+	bool IsFinished() const {
+		return isFinished_;
+	}
 };
 

@@ -14,6 +14,15 @@ static const uint32_t kWindowHeight = 720;
 // ゲームシーン
 class GameScene {
 private:
+	// ゲームのフェーズ（型）
+	enum class Phase {
+		kPlay,  // ゲームプレイ
+		kDeath, // デス演出
+	};
+
+	// ゲームの現在フェーズ（変数）
+	Phase phase_;
+
 	// テクスチャハンドル
 
 	// 3Dモデルデータ
@@ -51,6 +60,9 @@ private:
 	// デバッグカメラ
 	KamataEngine::DebugCamera* debugCamera_ = nullptr;
 
+	// 終了フラグ
+	bool finished_ = false;
+
 public:
 	// 初期化
 	void Initialize();
@@ -64,9 +76,16 @@ public:
 	// 描画
 	void Draw();
 
+	// デスフラグのgetter
+	bool IsFinished() const {
+		return finished_;
+	}
+
 private:
 	void GenarateBlocks();
 
 	// 全ての当たり判定を行う
 	void CheckAllCollisions();
+
+	void ChangePhase();
 };

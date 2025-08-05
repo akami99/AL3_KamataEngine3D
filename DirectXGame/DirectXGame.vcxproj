@@ -116,6 +116,7 @@
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Skydome.cpp" />
     <ClCompile Include="MatrixGenerators.cpp" />
+    <ClCompile Include="TitleScene.cpp" />
     <ClCompile Include="WorldTransform.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -204,6 +205,7 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="Skydome.h" />
     <ClInclude Include="MatrixGenerators.h" />
+    <ClInclude Include="TitleScene.h" />
     <ClInclude Include="WorldTransform.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -85,6 +85,9 @@ private:
 	static inline const float kAttenuationLanding = 0.4f;
 	static inline const float kAttenuationWall = 1.0f;
 
+	// デスフラグ
+	bool isDead_ = false;
+
 public:
 	/// <summary>
 	/// 初期化
@@ -120,6 +123,11 @@ public:
 
 	// AABBを取得
 	AABB GetAABB();
+
+	// デスフラグのgetter
+	bool IsDead() const {
+		return isDead_;
+	}
 
 	void SetMapChipField(MapChipField* mapChipField) {
 		mapChipField_ = mapChipField;
