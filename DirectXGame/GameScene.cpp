@@ -13,6 +13,7 @@ void GameScene::Initialize() {
 
 	// 3Dモデルデータの生成
 	model_ = Model::CreateFromOBJ("player", true);
+	modelAttack_ = Model::CreateFromOBJ("attack", true);
 	modelParticle_ = Model::CreateFromOBJ("particle", true);
 	modelBlock_ = Model::CreateFromOBJ("cube", true);
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
@@ -37,7 +38,7 @@ void GameScene::Initialize() {
 	// 座標をマップチップ番号で指定
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(4, 18);
 	// 自キャラの初期化
-	player_->Initialize(model_, &camera_, playerPosition);
+	player_->Initialize(model_, modelAttack_, &camera_, playerPosition);
 
 	// 敵キャラの生成
 	for (int32_t i = 0; i < kEnemyNum; ++i) {
@@ -80,6 +81,7 @@ void GameScene::Initialize() {
 GameScene::~GameScene() {
 	// 3Dモデルデータの解放
 	delete model_;
+	delete modelAttack_;
 	delete modelParticle_;
 	delete modelBlock_;
 	delete modelSkydome_;

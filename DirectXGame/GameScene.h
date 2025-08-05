@@ -34,6 +34,7 @@ private:
 
 	// 3Dモデルデータ
 	KamataEngine::Model* model_ = nullptr;
+	KamataEngine::Model* modelAttack_ = nullptr;
 	KamataEngine::Model* modelParticle_ = nullptr;
 	KamataEngine::Model* modelBlock_ = nullptr;
 	KamataEngine::Model* modelSkydome_ = nullptr;

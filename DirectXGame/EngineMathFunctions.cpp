@@ -79,6 +79,28 @@ float Lerp(float v1, float v2, float t) {
 	return result;
 }
 
+// tを0から1に変換するイーズアウト関数
+float EaseOutFloat(float t) {
+	return 1.0f - (1.0f - t) * (1.0f - t);
+}
+
+// イーズアウトを適用したLerp関数
+float EaseOutLerpFloat(float v1, float v2, float t) {
+	float easedT = EaseOutFloat(t);
+	return Lerp(v1, v2, easedT);
+}
+
+// tを0から1に変換するイーズイン関数
+float EaseInFloat(float t) {
+	return t * t;
+}
+
+// イーズインを適用したLerp関数
+float EaseInLerpFloat(float v1, float v2, float t) {
+	float easedT = EaseInFloat(t);
+	return Lerp(v1, v2, easedT);
+}
+
 // EaseInOut関数
 Vector3 EaseInOutLerp(const Vector3& v1, const Vector3& v2, float t) {
 	float easedT = Smoothstep(t); // t をイーズインアウト用に変換

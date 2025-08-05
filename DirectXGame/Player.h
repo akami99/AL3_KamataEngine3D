@@ -18,6 +18,28 @@ private:
 		kLeft,
 	};
 
+	// 振る舞い
+	enum class Behavior {
+		kUnknown = 0,
+		kRoot,  // 通常状態
+		kAttack,// 攻撃中
+	};
+
+	// 振る舞い
+	Behavior behavior_ = Behavior::kRoot;
+	// 次の振る舞いリクエスト
+	Behavior behaviorRequest_ = Behavior::kUnknown;
+
+	// 攻撃フェーズ（型）
+	enum class AttackPhase {
+		Charge,     // 溜め
+		Rush,       // 突進
+		Aftertaste, // 余韻
+	};
+
+	// 現在の攻撃フェーズ（変数）
+	AttackPhase attackPhase_;
+
 	// 角
 	enum class Corner {
 		kRightBottom,    // 右下
@@ -39,8 +61,10 @@ private:
 
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransform_;
+	KamataEngine::WorldTransform worldTransformAttack_;
 	// モデル
 	KamataEngine::Model* model_ = nullptr;
+	KamataEngine::Model* modelAttack_ = nullptr;
 	// カメラ
 	KamataEngine::Camera* camera_ = nullptr;
 	// マップチップによるフィールド
@@ -85,6 +109,12 @@ private:
 	static inline const float kAttenuationLanding = 0.4f;
 	static inline const float kAttenuationWall = 1.0f;
 
+	// 攻撃ギミックの経過時間カウンター
+	float  attackParameter_ = 0.0f;
+	static inline const float kChargeTime = 0.1f;
+	static inline const float kRushTime = 0.02f;
+	static inline const float kAftertasteTime = 0.4f;
+
 	// デスフラグ
 	bool isDead_ = false;
 
@@ -95,7 +125,7 @@ public:
 	/// <param name="model">モデル</param>
 	/// <param name="textureHandle">テクスチャハンドル</param>
 	/// <param name="camera">カメラ</param>
-	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
+	void Initialize(KamataEngine::Model* model, KamataEngine::Model* modelAttack, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
 
 	/// <summary>
 	/// 更新
@@ -134,6 +164,18 @@ public:
 	}
 
 private:
+	// 通常行動更新
+	void BehaviorRootUpdate();
+
+	// 攻撃行動更新
+	void BehaviorAttackUpdate();
+
+	// 通常行動初期化
+	void BehaviorRootInitialize();
+
+	// 攻撃行動初期化
+	void BehaviorAttackInitialize();
+
 	/// <summary>
 	/// 移動処理
 	/// </summary>

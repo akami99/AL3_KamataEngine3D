@@ -82,6 +82,18 @@ KamataEngine::Vector3 Lerp(const KamataEngine::Vector3& v1, const KamataEngine::
 /// <returns>Lerp</returns>
 float Lerp(float v1, float v2, float t);
 
+// tを0から1に変換するイーズアウト関数
+float EaseOutFloat(float t);
+
+// イーズアウトを適用したLerp関数
+float EaseOutLerpFloat(float v1, float v2, float t);
+
+// tを0から1に変換するイーズイン関数
+float EaseInFloat(float t);
+
+// イーズインを適用したLerp関数
+float EaseInLerpFloat(float v1, float v2, float t);
+
 /// <summary>
 /// イーズインアウトを適用したLerp関数
 /// </summary>
