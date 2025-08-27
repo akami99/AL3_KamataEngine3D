@@ -1,6 +1,7 @@
 #pragma once
 
 #include "KamataEngine.h"
+#include "Skydome.h"
 #include "Fade.h"
 
 /// <summary>
@@ -21,9 +22,14 @@ private:
 	// 3Dモデルデータ
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Model* modelTitleName_ = nullptr;
+	KamataEngine::Model* modelSkydome_ = nullptr;
+	KamataEngine::Model* modelBackGround_ = nullptr;
 
 	KamataEngine::WorldTransform worldTransform_;
 	KamataEngine::WorldTransform worldTransformTitle_;
+	KamataEngine::WorldTransform worldTransformBackGround1_;
+	KamataEngine::WorldTransform worldTransformBackGround2_;
+	KamataEngine::WorldTransform worldTransformBackGround3_;
 
 	float counter_ = 0.0f;
 	static inline const float kDuration = 1.0f;
@@ -32,6 +38,9 @@ private:
 
 	Fade* fade_ = nullptr;
 	static inline const float kFadeTime = 2.0f;
+
+	// 天球
+	Skydome* skydome_ = nullptr;
 
 	// カメラ
 	KamataEngine::Camera camera_;

@@ -18,6 +18,8 @@ void GameScene::Initialize() {
 	modelBlock_ = Model::CreateFromOBJ("cube", true);
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 	modelEnemy_ = Model::CreateFromOBJ("enemy", true);
+	modelDoor_ = Model::CreateFromOBJ("door", true);
+	modelBackGround_ = Model::CreateFromOBJ("background", true);
 
 	// カメラの初期化
 	camera_.Initialize();
@@ -33,6 +35,19 @@ void GameScene::Initialize() {
 	// 天球の初期化
 	skydome_->Initialize(modelSkydome_, &camera_);
 
+	worldTransformBackGround1_.Initialize();
+	worldTransformBackGround1_.translation_ = Vector3{ 10.0f, -6.0f, 0.0f };
+
+	worldTransformBackGround2_.Initialize();
+	worldTransformBackGround2_.translation_ = Vector3{ 40.0f, -6.0f, 0.0f };
+
+	worldTransformBackGround3_.Initialize();
+	worldTransformBackGround3_.translation_ = Vector3{ 70.0f, -6.0f, 0.0f };
+
+	worldTransformBackGround4_.Initialize();
+	worldTransformBackGround4_.translation_ = Vector3{ 100.0f, -6.0f, 0.0f };
+
+
 	// 自キャラの生成
 	player_ = new Player();
 	// 座標をマップチップ番号で指定
@@ -41,14 +56,26 @@ void GameScene::Initialize() {
 	player_->Initialize(model_, modelAttack_, &camera_, playerPosition);
 
 	// 敵キャラの生成
-	for (int32_t i = 0; i < kEnemyNum; ++i) {
-		Enemy* newEnemy = new Enemy();
-		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(18, 18 - i);
-		// 敵キャラの初期化（座標をマップチップ番号で指定）
-		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
-
-		enemies_.push_back(newEnemy);
-	}
+	//1段目
+	GenarateEnemies(23, 18);
+	GenarateEnemies(44, 18);
+	GenarateEnemies(74, 18);
+	GenarateEnemies(83, 18);
+	//2段目
+	GenarateEnemies(17, 13);
+	GenarateEnemies(28, 13);
+	GenarateEnemies(70, 13);
+	GenarateEnemies(80, 13);
+	//3段目
+	GenarateEnemies(24, 8);
+	GenarateEnemies(40, 8);
+	GenarateEnemies(66, 8);
+	GenarateEnemies(86, 8);
+	//4段目
+	GenarateEnemies(20, 3);
+	GenarateEnemies(35, 3);
+	GenarateEnemies(61, 3);
+	GenarateEnemies(78, 3);
 
 	// マップチップフィールドの参照をセット
 	player_->SetMapChipField(mapChipField_);
@@ -63,6 +90,11 @@ void GameScene::Initialize() {
 	// リセット（瞬間合わせ）
 	cameraController_->Reset();
 
+	// ゴールのドアを生成
+	door_ = new Door();
+	Vector3 doorPosition = mapChipField_->GetMapChipPositionByIndex(8, 3); // 例として、上から2段目の左端の敵の場所に配置
+	door_->Initialize(modelDoor_, &camera_, doorPosition);
+
 	// ブロックの生成
 	GenarateBlocks();
 
@@ -76,6 +108,11 @@ void GameScene::Initialize() {
 
 	// 初期フェーズはフェードイン
 	phase_ = Phase::kFadeIn;
+
+	UpdateWorldTransform(worldTransformBackGround1_);
+	UpdateWorldTransform(worldTransformBackGround2_);
+	UpdateWorldTransform(worldTransformBackGround3_);
+	UpdateWorldTransform(worldTransformBackGround4_);
 }
 
 GameScene::~GameScene() {
@@ -86,9 +123,14 @@ GameScene::~GameScene() {
 	delete modelBlock_;
 	delete modelSkydome_;
 	delete modelEnemy_;
+	delete modelDoor_;
+	delete modelBackGround_;
 	// 自キャラの解放
 	delete player_;
-	delete deathParticles_;
+	if (deathParticles_ != nullptr) {
+		delete deathParticles_;
+		deathParticles_ = nullptr;
+	}
 	// 敵キャラの解放
 	for (Enemy* enemy : enemies_) {
 		// newで確保したメモリをdeleteで解放
@@ -109,10 +151,14 @@ GameScene::~GameScene() {
 	}
 	worldTransformBlocks_.clear();
 
+	delete cameraController_;
+
 	// デバッグカメラの解放
 	delete debugCamera_;
 
 	delete fade_;
+
+	delete door_;
 }
 
 void GameScene::Update() {
@@ -123,6 +169,43 @@ void GameScene::Update() {
 		if (fade_->IsFinished()) { // フェードインが終了したら
 			phase_ = Phase::kPlay;
 		}
+		// 自キャラの更新
+		player_->Update();
+
+		// 敵キャラの更新
+		for (Enemy* enemy : enemies_) {
+			enemy->Update();
+		}
+
+		// ゴールのドアの更新
+		door_->Update();
+
+		// 追従カメラの更新
+		cameraController_->Update();
+
+		// カメラの処理
+		if (isDebugCameraActive_) {
+			// デバッグカメラの更新
+			debugCamera_->Update();
+			camera_.matView = debugCamera_->GetCamera().matView;
+			camera_.matProjection = debugCamera_->GetCamera().matProjection;
+			// ビュープロジェクション行列の転送
+			camera_.TransferMatrix();
+		} else {
+			// ビュープロジェクション行列の更新と転送
+			camera_.UpdateMatrix();
+		}
+
+		// ブロックの更新
+		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+			for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+				if (!worldTransformBlock)
+					continue;
+
+				// 定数バッファに転送する
+				UpdateWorldTransform(*worldTransformBlock);
+			}
+		}
 		break;
 	case Phase::kPlay:
 		// 天球の更新
@@ -132,55 +215,58 @@ void GameScene::Update() {
 		player_->Update();
 
 		// 敵キャラの更新
-for (Enemy* enemy : enemies_) {
-	enemy->Update();
-}
+		for (Enemy* enemy : enemies_) {
+			enemy->Update();
+		}
 
-// 追従カメラの更新
-cameraController_->Update();
+		// ゴールのドアの更新
+		door_->Update();
+
+		// 追従カメラの更新
+		cameraController_->Update();
 
 #ifdef _DEBUG
 
-if (Input::GetInstance()->TriggerKey(DIK_TAB)) {
-	// デバッグカメラ有効フラグをトグル
-	if (isDebugCameraActive_) {
-		isDebugCameraActive_ = false;
-	} else {
-		isDebugCameraActive_ = true;
-	}
-}
+		if (Input::GetInstance()->TriggerKey(DIK_TAB)) {
+			// デバッグカメラ有効フラグをトグル
+			if (isDebugCameraActive_) {
+				isDebugCameraActive_ = false;
+			} else {
+				isDebugCameraActive_ = true;
+			}
+		}
 #endif
 
-// カメラの処理
-if (isDebugCameraActive_) {
-	// デバッグカメラの更新
-	debugCamera_->Update();
-	camera_.matView = debugCamera_->GetCamera().matView;
-	camera_.matProjection = debugCamera_->GetCamera().matProjection;
-	// ビュープロジェクション行列の転送
-	camera_.TransferMatrix();
-} else {
-	// ビュープロジェクション行列の更新と転送
-	camera_.UpdateMatrix();
-}
+		// カメラの処理
+		if (isDebugCameraActive_) {
+			// デバッグカメラの更新
+			debugCamera_->Update();
+			camera_.matView = debugCamera_->GetCamera().matView;
+			camera_.matProjection = debugCamera_->GetCamera().matProjection;
+			// ビュープロジェクション行列の転送
+			camera_.TransferMatrix();
+		} else {
+			// ビュープロジェクション行列の更新と転送
+			camera_.UpdateMatrix();
+		}
 
-// ブロックの更新
-for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
-	for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
-		if (!worldTransformBlock)
-			continue;
+		// ブロックの更新
+		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+			for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+				if (!worldTransformBlock)
+					continue;
 
-		// 定数バッファに転送する
-		UpdateWorldTransform(*worldTransformBlock);
-	}
-}
+				// 定数バッファに転送する
+				UpdateWorldTransform(*worldTransformBlock);
+			}
+		}
 
-// 全ての当たり判定を行う
-CheckAllCollisions();
+		// 全ての当たり判定を行う
+		CheckAllCollisions();
 
-ChangePhase();
+		ChangePhase();
 
-break;
+		break;
 	case Phase::kDeath:
 		// 天球の更新
 		skydome_->Update();
@@ -258,6 +344,12 @@ void GameScene::Draw() {
 	// 天球の描画
 	skydome_->Draw();
 
+	// 背景の描画
+	modelBackGround_->Draw(worldTransformBackGround1_, camera_);
+	modelBackGround_->Draw(worldTransformBackGround2_, camera_);
+	modelBackGround_->Draw(worldTransformBackGround3_, camera_);
+	modelBackGround_->Draw(worldTransformBackGround4_, camera_);
+
 	// 自キャラの描画
 	if (!player_->IsDead()) {
 		player_->Draw();
@@ -271,6 +363,9 @@ void GameScene::Draw() {
 	for (Enemy* enemy : enemies_) {
 		enemy->Draw();
 	}
+
+	// ドアの描画
+	door_->Draw(); 
 
 	// ブロックの描画
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -288,7 +383,9 @@ void GameScene::Draw() {
 
 	// フェードイン中/フェードアウト中はフェードの描画を行う
 	if (phase_ == Phase::kFadeIn || phase_ == Phase::kFadeOut) {
+		Sprite::PreDraw(dxCommon->GetCommandList());
 		fade_->Draw();
+		Sprite::PostDraw();
 	}
 }
 
@@ -320,6 +417,15 @@ void GameScene::GenarateBlocks() {
 
 }
 
+void GameScene::GenarateEnemies(uint32_t xIndex, uint32_t yIndex) {
+		Enemy* newEnemy = new Enemy();
+		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(xIndex, yIndex);
+		// 敵キャラの初期化（座標をマップチップ番号で指定）
+		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+
+		enemies_.push_back(newEnemy);
+}
+
 void GameScene::CheckAllCollisions() {
 #pragma region 自キャラと敵キャラの当たり判定
 	// 判定対象1と2の座標
@@ -340,6 +446,18 @@ void GameScene::CheckAllCollisions() {
 			// 敵の衝突時関数を呼び出す
 			enemy->OnCollision(player_);
 		}
+	}
+
+#pragma endregion
+#pragma region 自キャラとドアの当たり判定
+	// ドアの座標
+	aabb2 = door_->GetAABB();
+
+	// 自キャラとドアの当たり判定
+	if (IsCollision(aabb1, aabb2)) {
+		// プレイヤーがドアに触れたら即座にクリアフェーズへ移行
+		fade_->Start(Fade::Status::FadeOut, kFadeTime);
+		phase_ = Phase::kFadeOut;
 	}
 
 #pragma endregion

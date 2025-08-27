@@ -13,7 +13,7 @@ CameraController::CameraController(KamataEngine::Camera& camera) : camera_(camer
 
 void CameraController::Initialize() {
 	// 移動範囲の指定
-	movableArea_ = { 11, 88, 6, 90 };
+	movableArea_ = { 11, 88, 6, 13 };
 }
 
 void CameraController::Update() {
@@ -25,6 +25,7 @@ void CameraController::Update() {
 
 	// 座標補間によりゆったり追従
 	camera_.translation_.x = Lerp(camera_.translation_.x, targetPosition_.x, kInterpolationRate);
+	camera_.translation_.y = Lerp(camera_.translation_.y, targetPosition_.y, kInterpolationRate);
 
 	// 追従対象が画面外に出ないように補正
 	camera_.translation_.x = (std::max)(camera_.translation_.x, targetPosition_.x + kMargin.left);

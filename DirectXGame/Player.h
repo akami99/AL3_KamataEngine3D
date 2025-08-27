@@ -73,11 +73,11 @@ private:
 	// 速度
 	KamataEngine::Vector3 velocity_ = {};
 	// 加速度
-	static inline const float kAcceleration = 0.002f;
+	static inline const float kAcceleration = 0.05f;
 	// 減速度
 	static inline const float kAttenuation = 0.08f;
 	// 移動速度の上限
-	static inline const float kLimitRunSpeed = 0.2f;
+	static inline const float kLimitRunSpeed = 5.0f;
 	// 移動方向
 	LRDirection lrDirection_ = LRDirection::kRight;
 

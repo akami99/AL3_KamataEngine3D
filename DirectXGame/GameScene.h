@@ -7,6 +7,7 @@
 #include "Fade.h"
 #include "MapChipField.h"
 #include "CameraController.h"
+#include "Door.h"
 #include <vector>
 
 static const uint32_t kWindowWidth = 1280;
@@ -39,12 +40,20 @@ private:
 	KamataEngine::Model* modelBlock_ = nullptr;
 	KamataEngine::Model* modelSkydome_ = nullptr;
 	KamataEngine::Model* modelEnemy_ = nullptr;
+	KamataEngine::Model* modelDoor_ = nullptr;
+	KamataEngine::Model* modelBackGround_ = nullptr;
 
 	// カメラ
 	KamataEngine::Camera camera_;
 
 	// 天球
 	Skydome* skydome_ = nullptr;
+
+	// 背景
+	KamataEngine::WorldTransform worldTransformBackGround1_;
+	KamataEngine::WorldTransform worldTransformBackGround2_;
+	KamataEngine::WorldTransform worldTransformBackGround3_;
+	KamataEngine::WorldTransform worldTransformBackGround4_;
 
 	// マップチップフィールド
 	MapChipField* mapChipField_;
@@ -57,11 +66,14 @@ private:
 	// 敵キャラ
 	std::list<Enemy*> enemies_;
 	// 敵の数
-	static inline const int32_t kEnemyNum = 3;
+	static inline const int32_t kEnemyNum = 16;
 
 	std::vector<std::vector<KamataEngine::WorldTransform*>> worldTransformBlocks_;
 
 	CameraController* cameraController_ = nullptr;
+
+	// ゴールのドア
+	Door* door_ = nullptr;
 
 	// デバッグカメラ有効
 	bool isDebugCameraActive_ = false;
@@ -91,6 +103,8 @@ public:
 
 private:
 	void GenarateBlocks();
+
+	void GenarateEnemies(uint32_t xIndex, uint32_t yIndex);
 
 	// 全ての当たり判定を行う
 	void CheckAllCollisions();

@@ -8,8 +8,15 @@
 using namespace KamataEngine;
 
 void DeathParticles::Initialize(Model* model, Camera* camera, const Vector3& position) {
+#ifdef DEBUG
+
 	// NULLポインタチェック
 	assert(model);
+
+#endif // DEBUG
+	if (!model) {
+		return; // または適切なエラーハンドリング
+	}
 
 	// 引数の内容をメンバ変数に記録
 	model_ = model;

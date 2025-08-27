@@ -10,6 +10,8 @@ void TitleScene::Initialize() {
 	// 3Dモデルデータの生成
 	model_ = Model::CreateFromOBJ("player", true);
 	modelTitleName_ = Model::CreateFromOBJ("title", true);
+	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
+	modelBackGround_ = Model::CreateFromOBJ("background", true);
 
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = Vector3{ 0.0f, -1.0f, -4.0f };
@@ -18,25 +20,51 @@ void TitleScene::Initialize() {
 	worldTransformTitle_.Initialize();
 	worldTransformTitle_.translation_ = Vector3{ 0.0f, 2.0f, 0.0f };
 
+	worldTransformBackGround1_.Initialize();
+	worldTransformBackGround1_.translation_ = Vector3{ -30.0f, -15.0f, 20.0f };
+
+	worldTransformBackGround2_.Initialize();
+	worldTransformBackGround2_.translation_ = Vector3{ 0.0f, -15.0f, 20.0f };
+
+	worldTransformBackGround3_.Initialize();
+	worldTransformBackGround3_.translation_ = Vector3{ 30.0f, -15.0f, 20.0f };
+
 	// カメラの初期化
 	camera_.Initialize();
-	camera_.farZ = 100.0f; // 遠くのオブジェクトまで描画するためにfarZを大きく設定
+	camera_.farZ = 1000.0f; // 遠くのオブジェクトまで描画するためにfarZを大きく設定
 	camera_.translation_.z = -10.0f;
+
+	// 天球の生成
+	skydome_ = new Skydome();
+	// 天球の初期化
+	skydome_->Initialize(modelSkydome_, &camera_);
 
 	fade_ = new Fade();
 	fade_->Initialize();
 	fade_->Start(Fade::Status::FadeIn, kFadeTime);
+
+	UpdateWorldTransform(worldTransformBackGround1_);
+	UpdateWorldTransform(worldTransformBackGround2_);
+	UpdateWorldTransform(worldTransformBackGround3_);
 }
 
 TitleScene::~TitleScene() {
 	// 3Dモデルデータの解放
 	delete model_;
 	delete modelTitleName_;
+	delete modelSkydome_;
+	delete modelBackGround_;
+
 	delete fade_;
+	delete skydome_;
 }
 
 void TitleScene::Update() {
 	float t = 0.0f;
+
+	// 天球の更新
+	skydome_->Update();
+
 	switch (phase_) {
 	case Phase::kFadeIn: // フェードインフェーズ
 		fade_->Update();
@@ -85,6 +113,13 @@ void TitleScene::Draw() {
 	// 3Dモデル描画前処理
 	Model::PreDraw(dxCommon->GetCommandList());
 
+	// 天球の描画
+	skydome_->Draw();
+
+	// 背景の描画
+	modelBackGround_->Draw(worldTransformBackGround1_, camera_);
+	modelBackGround_->Draw(worldTransformBackGround2_, camera_);
+	modelBackGround_->Draw(worldTransformBackGround3_, camera_);
 
 	// 自キャラの描画
 	model_->Draw(worldTransform_, camera_);

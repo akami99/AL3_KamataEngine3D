@@ -47,6 +47,11 @@ public:
 	MapChipField();
 	~MapChipField();
 
+	// 1ブロックのサイズを取得
+	float GetChipSize() const {
+		return kBlockWidth;
+	}
+
 	uint32_t GetNumBlockVertical() const {
 		return kNumBlockVertical;
 	}

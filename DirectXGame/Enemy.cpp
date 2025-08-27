@@ -6,8 +6,15 @@
 using namespace KamataEngine;
 
 void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
+#ifdef _DEBUG
+
 	// NULLポインタチェック
 	assert(model);
+
+#endif // _DEBUG
+	if (!model) {
+		return; // または適切なエラーハンドリング
+	}
 
 	// 引数の内容をメンバ変数に記録
 	model_ = model;

@@ -25,7 +25,7 @@ private:
 	static inline const float kHeight = 0.9f;
 
 	// 歩行の速さ
-	static inline const float kWalkSpeed = 0.01f;
+	static inline const float kWalkSpeed = 0.00f;
 	// 速度
 	KamataEngine::Vector3 velocity_ = {};
 	// 移動方向
