@@ -22,6 +22,7 @@ private:
 		kPlay,   // ゲームプレイ
 		kDeath,  // デス演出
 		kFadeOut,// フェードアウト
+		kClear   // ゲームクリア
 	};
 
 	// ゲームの現在フェーズ（変数）
@@ -80,6 +81,9 @@ private:
 	// デバッグカメラ
 	KamataEngine::DebugCamera* debugCamera_ = nullptr;
 
+	// プレイヤー死亡判定
+	bool isPlayerDead_ = false;
+
 	// 終了フラグ
 	bool finished_ = false;
 
@@ -95,6 +99,11 @@ public:
 
 	// 描画
 	void Draw();
+
+	//プレイヤー死亡判定のgetter
+	bool IsPlayerDead() const {
+		return isPlayerDead_;
+	}
 
 	// デスフラグのgetter
 	bool IsFinished() const {

@@ -1,4 +1,4 @@
-#include "TitleScene.h"
+#include "GameClearScene.h"
 #include "EngineMathFunctions.h"
 #include "WorldTransform.h"
 #include <numbers>
@@ -6,27 +6,14 @@
 
 using namespace KamataEngine;
 
-void TitleScene::Initialize() {
+void GameClearScene::Initialize() {
 	// 3Dモデルデータの生成
-	model_ = Model::CreateFromOBJ("player", true);
-	modelTitleName_ = Model::CreateFromOBJ("title", true);
-	modelSpace_ = Model::CreateFromOBJ("space", true);
-	modelADButton_ = Model::CreateFromOBJ("adButton", true);
+	modelClearName_ = Model::CreateFromOBJ("clear", true);
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 	modelBackGround_ = Model::CreateFromOBJ("background", true);
 
-	worldTransform_.Initialize();
-	worldTransform_.translation_ = Vector3{ 0.0f, -1.0f, -4.0f };
-	worldTransform_.rotation_.y = std::numbers::pi_v<float>;
-
-	worldTransformTitle_.Initialize();
-	worldTransformTitle_.translation_ = Vector3{ 0.0f, 2.0f, 0.0f };
-
-	worldTransformSpace_.Initialize();
-	worldTransformSpace_.translation_ = Vector3{ 2.5f, -1.5f, 0.0f };
-
-	worldTransformADButton_.Initialize();
-	worldTransformADButton_.translation_ = Vector3{ -2.5f, -1.5f, 0.0f };
+	worldTransformClear_.Initialize();
+	worldTransformClear_.translation_ = Vector3{ 0.0f, 2.0f, 0.0f };
 
 	worldTransformBackGround1_.Initialize();
 	worldTransformBackGround1_.translation_ = Vector3{ -30.0f, -15.0f, 20.0f };
@@ -39,7 +26,7 @@ void TitleScene::Initialize() {
 
 	// カメラの初期化
 	camera_.Initialize();
-	camera_.farZ = 1000.0f; // 遠くのオブジェクトまで描画するためにfarZを大きく設定
+	camera_.farZ = 1000.0f;
 	camera_.translation_.z = -10.0f;
 
 	// 天球の生成
@@ -51,19 +38,14 @@ void TitleScene::Initialize() {
 	fade_->Initialize();
 	fade_->Start(Fade::Status::FadeIn, kFadeTime);
 
-	UpdateWorldTransform(worldTransformTitle_);
-	UpdateWorldTransform(worldTransformSpace_);
-	UpdateWorldTransform(worldTransformADButton_);
 	UpdateWorldTransform(worldTransformBackGround1_);
 	UpdateWorldTransform(worldTransformBackGround2_);
 	UpdateWorldTransform(worldTransformBackGround3_);
 }
 
-TitleScene::~TitleScene() {
+GameClearScene::~GameClearScene() {
 	// 3Dモデルデータの解放
-	delete model_;
-	delete modelTitleName_;
-	delete modelSpace_;
+	delete modelClearName_;
 	delete modelSkydome_;
 	delete modelBackGround_;
 
@@ -71,54 +53,51 @@ TitleScene::~TitleScene() {
 	delete skydome_;
 }
 
-void TitleScene::Update() {
+void GameClearScene::Update() {
 	float t = 0.0f;
 
 	// 天球の更新
 	skydome_->Update();
 
 	switch (phase_) {
-	case Phase::kFadeIn: // フェードインフェーズ
+	case Phase::kFadeIn:
 		fade_->Update();
 		if (fade_->IsFinished()) {
-			// フェードインが終了したらメインフェーズに切り替え
 			phase_ = Phase::kMain;
-			fade_->Initialize(); // フェードの値をリセット
+			fade_->Initialize();
 		}
 		break;
 
-	case Phase::kMain: // メインフェーズ
-		// メイン部ではスペースキーを押したらフェードアウトを開始する
+	case Phase::kMain:
+		// スペースキーを押すとフェードアウトを開始する
 		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-			fade_->Start(Fade::Status::FadeOut, kFadeTime); // フェードアウト開始
+			fade_->Start(Fade::Status::FadeOut, kFadeTime);
 			phase_ = Phase::kFadeOut;
 		}
 
-		// タイトルアニメーションなど、メインの更新処理
+		// タイトルと同じく、Clearの文字をアニメーションさせる
 		counter_ += returnT_ * (1.0f / 60.0f);
 		if (counter_ >= kDuration || counter_ <= 0.0f) {
 			returnT_ *= -1.0f;
 		}
 		t = counter_ / kDuration;
-		worldTransformTitle_.translation_.y = std::clamp((1.0f - t), 0.0f, 1.0f) + kOriginePos;
+		worldTransformClear_.translation_.y = std::clamp((1.0f - t), 0.0f, 1.0f) + kOriginePos;
 
 		break;
 
-	case Phase::kFadeOut: // フェードアウトフェーズ
+	case Phase::kFadeOut:
 		fade_->Update();
 		if (fade_->IsFinished()) {
-			// フェードアウトが終了したらタイトルシーンを終了する
 			finished_ = true;
 		}
 		break;
 	}
 
-	UpdateWorldTransform(worldTransform_);
-	UpdateWorldTransform(worldTransformTitle_);
+	UpdateWorldTransform(worldTransformClear_);
 	camera_.UpdateMatrix();
 }
 
-void TitleScene::Draw() {
+void GameClearScene::Draw() {
 	// DirectXCommonインスタンスの取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
@@ -133,18 +112,12 @@ void TitleScene::Draw() {
 	modelBackGround_->Draw(worldTransformBackGround2_, camera_);
 	modelBackGround_->Draw(worldTransformBackGround3_, camera_);
 
-	// 自キャラの描画
-	model_->Draw(worldTransform_, camera_);
+	// Clearモデルの描画
+	modelClearName_->Draw(worldTransformClear_, camera_);
 
-	modelTitleName_->Draw(worldTransformTitle_, camera_);
-
-	modelSpace_->Draw(worldTransformSpace_, camera_);
-
-	modelADButton_->Draw(worldTransformADButton_, camera_);
-	
 	// 3Dモデル描画後処理
 	Model::PostDraw();
-	// フェードイン中/フェードアウト中はフェードの描画を行う
+	// フェードの描画
 	if (phase_ == Phase::kFadeIn || phase_ == Phase::kFadeOut) {
 		Sprite::PreDraw(dxCommon->GetCommandList());
 		fade_->Draw();

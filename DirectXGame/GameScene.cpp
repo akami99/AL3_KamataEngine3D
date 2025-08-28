@@ -331,6 +331,9 @@ void GameScene::Update() {
 			finished_ = true;
 		}
 		break;
+	case Phase::kClear: // 追加
+		finished_ = true;
+		break;
 	}
 }
 
@@ -365,7 +368,7 @@ void GameScene::Draw() {
 	}
 
 	// ドアの描画
-	door_->Draw(); 
+	door_->Draw();
 
 	// ブロックの描画
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -418,12 +421,12 @@ void GameScene::GenarateBlocks() {
 }
 
 void GameScene::GenarateEnemies(uint32_t xIndex, uint32_t yIndex) {
-		Enemy* newEnemy = new Enemy();
-		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(xIndex, yIndex);
-		// 敵キャラの初期化（座標をマップチップ番号で指定）
-		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+	Enemy* newEnemy = new Enemy();
+	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(xIndex, yIndex);
+	// 敵キャラの初期化（座標をマップチップ番号で指定）
+	newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
 
-		enemies_.push_back(newEnemy);
+	enemies_.push_back(newEnemy);
 }
 
 void GameScene::CheckAllCollisions() {
@@ -445,6 +448,9 @@ void GameScene::CheckAllCollisions() {
 			player_->OnCollision(enemy);
 			// 敵の衝突時関数を呼び出す
 			enemy->OnCollision(player_);
+			
+			// プレイヤー死亡時判定
+			isPlayerDead_ = player_->IsDead();
 		}
 	}
 
@@ -456,8 +462,7 @@ void GameScene::CheckAllCollisions() {
 	// 自キャラとドアの当たり判定
 	if (IsCollision(aabb1, aabb2)) {
 		// プレイヤーがドアに触れたら即座にクリアフェーズへ移行
-		fade_->Start(Fade::Status::FadeOut, kFadeTime);
-		phase_ = Phase::kFadeOut;
+		phase_ = Phase::kClear;
 	}
 
 #pragma endregion

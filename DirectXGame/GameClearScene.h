@@ -5,9 +5,9 @@
 #include "Fade.h"
 
 /// <summary>
-/// タイトルシーン
+/// ゲームクリアシーン
 /// </summary>
-class TitleScene {
+class GameClearScene {
 private:
 	// シーンのフェーズ
 	enum class Phase {
@@ -20,17 +20,11 @@ private:
 	Phase phase_ = Phase::kFadeIn;
 
 	// 3Dモデルデータ
-	KamataEngine::Model* model_ = nullptr;
-	KamataEngine::Model* modelTitleName_ = nullptr;
-	KamataEngine::Model* modelSpace_ = nullptr;
-	KamataEngine::Model* modelADButton_ = nullptr;
+	KamataEngine::Model* modelClearName_ = nullptr;
 	KamataEngine::Model* modelSkydome_ = nullptr;
 	KamataEngine::Model* modelBackGround_ = nullptr;
 
-	KamataEngine::WorldTransform worldTransform_;
-	KamataEngine::WorldTransform worldTransformTitle_;
-	KamataEngine::WorldTransform worldTransformSpace_;
-	KamataEngine::WorldTransform worldTransformADButton_;
+	KamataEngine::WorldTransform worldTransformClear_;
 	KamataEngine::WorldTransform worldTransformBackGround1_;
 	KamataEngine::WorldTransform worldTransformBackGround2_;
 	KamataEngine::WorldTransform worldTransformBackGround3_;
@@ -51,13 +45,14 @@ private:
 
 	// 終了フラグ
 	bool finished_ = false;
+
 public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
 	void Initialize();
 
-	~TitleScene();
+	~GameClearScene();
 
 	/// <summary>
 	/// 更新
@@ -74,4 +69,3 @@ public:
 		return finished_;
 	}
 };
-

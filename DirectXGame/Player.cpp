@@ -106,15 +106,15 @@ AABB Player::GetAABB() {
 }
 
 void Player::BehaviorRootUpdate() {
-#ifdef _DEBUG
-
-	// 攻撃キーを押したら
-	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-		// 攻撃ビヘイビアをリクエスト
-		behaviorRequest_ = Behavior::kAttack;
-	}
-
-#endif // _DEBUG
+//#ifdef _DEBUG
+//
+//	// 攻撃キーを押したら
+//	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+//		// 攻撃ビヘイビアをリクエスト
+//		behaviorRequest_ = Behavior::kAttack;
+//	}
+//
+//#endif // _DEBUG
 
 	// 1.移動入力
 	Move();
@@ -301,7 +301,7 @@ void Player::Move() {
 			// 非入力時は移動減衰を書ける
 			velocity_.x *= (1.0f - kAttenuation);
 		}
-		if (Input::GetInstance()->PushKey(DIK_W)) {
+		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
 			// ジャンプ初速
 			velocity_ += Vector3(0.0f, kJumpAcceleration, 0.0f);
 		}
