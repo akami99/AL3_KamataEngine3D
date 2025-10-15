@@ -39,9 +39,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
 	// 最初のシーンの初期化
+#ifdef _DEBUG
+	scene = Scene::kGame;
+	gameScene = new GameScene;
+	gameScene->Initialize();
+#else
 	scene = Scene::kTitle;
 	titleScene = new TitleScene;
 	titleScene->Initialize();
+#endif // _DEBUG
 
 	// メインループ
 	while (true) {

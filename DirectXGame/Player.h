@@ -12,10 +12,12 @@ class MapChipField;
 /// </summary>
 class Player {
 private:
-	// 左右
-	enum class LRDirection {
-		kRight,
-		kLeft,
+	// 方向
+	enum class Direction {
+		kRight, // 右
+		kLeft,  // 左
+		kFront, // 正面
+		kBack,  // 背面
 	};
 
 	// 振る舞い
@@ -77,9 +79,9 @@ private:
 	// 減速度
 	static inline const float kAttenuation = 0.08f;
 	// 移動速度の上限
-	static inline const float kLimitRunSpeed = 5.0f;
+	static inline const float kLimitRunSpeed = 0.2f;
 	// 移動方向
-	LRDirection lrDirection_ = LRDirection::kRight;
+	Direction direction_ = Direction::kRight;
 
 	// 旋回開始時の角度
 	float turnFirstRotationY_ = 0.0f;
@@ -96,7 +98,7 @@ private:
 	// 最大落下速度（下方向）
 	static inline const float kLimitFallSpeed = 0.08f;
 	// ジャンプ初速（上方向）
-	static inline const float kJumpAcceleration = 0.12f;
+	static inline const float kJumpAcceleration = 0.1f;
 
 	// キャラクターの当たり判定サイズ(実際に使う際に調整する部分)
 	static inline const float kWidth = 0.9f;

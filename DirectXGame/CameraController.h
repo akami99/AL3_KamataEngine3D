@@ -24,16 +24,16 @@ private:
 	Player* target_ = nullptr;
 	
 	// 追従対象とカメラの座標の差（オフセット）
-	KamataEngine::Vector3 TargetOffset_ = { 0.0f, 0.0f, -15.0f };
+	KamataEngine::Vector3 TargetOffset_ = { 0.0f, 10.0f, -10.0f };
 
 	// カメラの移動範囲
-	Rect movableArea_ = { 0, 100, 0, 100 }; //変更する
+	Rect movableArea_ = { -10, 100, -10, 100 }; //変更する
 	// カメラの目標座標
 	KamataEngine::Vector3 targetPosition_ = { 0.0f, 0.0f, 0.0f };
 	// 座標補間割合
 	static inline const float kInterpolationRate = 0.1f; // 0.0f ~ 1.0f
 	// 速度掛け率
-	static inline const float kVelocityBias = 20.0f;
+	static inline const float kVelocityBias = 1.0f;
 	// 追従対象の各方向へのカメラ移動範囲
 	static inline const Rect kMargin = { -10.0f, 10.0f, -10.0f, 10.0f }; //プレイヤーが画面外に行くようだったら変更する
 
