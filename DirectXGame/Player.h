@@ -20,11 +20,15 @@ private:
 		kBack,  // 背面
 	};
 
+	// 移動方向
+	Direction direction_ = Direction::kRight;
+
 	// 振る舞い
 	enum class Behavior {
 		kUnknown = 0,
-		kRoot,  // 通常状態
-		kAttack,// 攻撃中
+		kRoot,   // 通常状態
+		kAttack, // 攻撃中
+		kDodge,  // 回避行動
 	};
 
 	// 振る舞い
@@ -41,6 +45,15 @@ private:
 
 	// 現在の攻撃フェーズ（変数）
 	AttackPhase attackPhase_;
+
+	// 回避フェーズ（型）
+	enum class DodgePhase {
+		Main,       // 回避中
+		Aftertaste, // 余韻
+	};
+
+	// 現在の回避フェーズ（変数）
+	DodgePhase dodgePhase_;
 
 	// 角
 	enum class Corner {
@@ -80,15 +93,9 @@ private:
 	static inline const float kAttenuation = 0.08f;
 	// 移動速度の上限
 	static inline const float kLimitRunSpeed = 0.2f;
-	// 移動方向
-	Direction direction_ = Direction::kRight;
 
-	// 旋回開始時の角度
-	float turnFirstRotationY_ = 0.0f;
-	// 旋回タイマー
-	float turnTimer_ = 0.0f;
-	// 旋回時間<秒>
-	static inline const float kTimeTurn = 0.3f;
+	// 回転速度
+	static inline const float kRotationSpeed = 0.2f;
 
 	// 接地状態フラグ
 	bool onGround_ = true;
@@ -113,12 +120,30 @@ private:
 
 	// 攻撃ギミックの経過時間カウンター
 	float  attackParameter_ = 0.0f;
+	// 攻撃方向
+	KamataEngine::Vector3 attackDirection_ = {};
+	// 攻撃速度
+	static inline const float kAttackSpeed = 2.0f;
+	// 各攻撃フェーズの時間<秒>
 	static inline const float kChargeTime = 0.1f;
 	static inline const float kRushTime = 0.02f;
 	static inline const float kAftertasteTime = 0.4f;
 
 	// デスフラグ
 	bool isDead_ = false;
+
+	// 回避ギミックの経過時間カウンター
+	float dodgeParameter_ = 0.0f;
+	// 回避時間<秒>
+	static inline const float kDodgeMainTime = 0.2f;       // 回避行動の継続時間
+	static inline const float kDodgeAftertasteTime = 0.1f; // スケールを戻す時間
+	// 回避速度
+	static inline const float kDodgeSpeed = 0.5f; // 回避行動の速度
+	// 回避方向
+	KamataEngine::Vector3 dodgeDirection_ = {};
+
+	// 無敵フラグ
+	bool isInvincible_ = false;
 
 public:
 	/// <summary>
@@ -161,22 +186,33 @@ public:
 		return isDead_;
 	}
 
+	// 無敵フラグのgetter
+	bool IsInvincible() const {
+		return isInvincible_;
+	}
+
 	void SetMapChipField(MapChipField* mapChipField) {
 		mapChipField_ = mapChipField;
 	}
 
 private:
+	// 通常行動初期化
+	void BehaviorRootInitialize();
+
+	// 攻撃行動初期化
+	void BehaviorAttackInitialize();
+
+	// 回避行動初期化
+	void BehaviorDodgeInitialize();
+
 	// 通常行動更新
 	void BehaviorRootUpdate();
 
 	// 攻撃行動更新
 	void BehaviorAttackUpdate();
 
-	// 通常行動初期化
-	void BehaviorRootInitialize();
-
-	// 攻撃行動初期化
-	void BehaviorAttackInitialize();
+	// 回避行動更新
+	void BehaviorDodgeUpdate();
 
 	/// <summary>
 	/// 移動処理

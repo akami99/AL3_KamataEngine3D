@@ -7,8 +7,30 @@
 #include <cassert>
 #include <numbers>
 #include <algorithm>
+#include <cmath>
 
 using namespace KamataEngine;
+
+// 最短角度補間関数
+float LerpShortestAngle(float a, float b, float t) {
+	// 角度の差を計算
+	float diff = b - a;
+
+	// 差を-πからπの範囲に正規化
+	float pi = std::numbers::pi_v<float>;
+	float twoPi = 2.0f * pi;
+
+	// fmodを使って剰余を計算する
+	diff = std::fmod(diff, twoPi);
+	if (diff > pi) {
+		diff -= twoPi; // +180度を超える場合は-360度分を引く
+	} else if (diff < -pi) {
+		diff += twoPi; // -180度未満の場合は+360度分を足す
+	}
+
+	// 現在の角度に、補間係数をかけた差分を加算
+	return a + diff * t;
+}
 
 void Player::Initialize(Model* model, Model* modelAttack, Camera* camera, const Vector3& position) {
 #ifdef _DEBUG
@@ -51,6 +73,9 @@ void Player::Update() {
 		case Behavior::kAttack:
 			BehaviorAttackInitialize();
 			break;
+		case Behavior::kDodge:
+			BehaviorDodgeInitialize();
+			break;
 		}
 		// 振る舞いリクエストをリセット
 		behaviorRequest_ = Behavior::kUnknown;
@@ -64,6 +89,9 @@ void Player::Update() {
 		// 攻撃行動
 	case Behavior::kAttack:
 		BehaviorAttackUpdate();
+		break;
+	case Behavior::kDodge:
+		BehaviorDodgeUpdate();
 		break;
 	}
 
@@ -79,6 +107,11 @@ void Player::Draw() {
 }
 
 void Player::OnCollision(const Enemy* enemy) {
+	// 無敵中なら、何もせず処理を終了
+	if (isInvincible_) {
+		return;
+	}
+
 	(void)enemy;
 	isDead_ = true;
 }
@@ -105,21 +138,150 @@ AABB Player::GetAABB() {
 	return aabb;
 }
 
-void Player::BehaviorRootUpdate() {
-	#ifdef _DEBUG
-	
-		// 攻撃キーを押したら
-		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-			// 攻撃ビヘイビアをリクエスト
-			behaviorRequest_ = Behavior::kAttack;
-		}
-	
-	#endif // _DEBUG
+void Player::BehaviorRootInitialize() {}
 
-		// 1.移動入力
+void Player::BehaviorAttackInitialize() {
+	// カウンター初期化
+	attackParameter_ = 0;
+	// フェーズを「Charge」に設定
+	attackPhase_ = AttackPhase::Charge;
+	// 攻撃方向をリセット
+	attackDirection_ = {};
+
+	// ----- 攻撃方向の決定 -----
+	// 現在のキー入力状態から決定する
+	Vector3 inputDirection = {};
+	if (Input::GetInstance()->PushKey(DIK_D)) {
+		inputDirection.x += 1.0f;
+	}
+	if (Input::GetInstance()->PushKey(DIK_A)) {
+		inputDirection.x -= 1.0f;
+	}
+	if (Input::GetInstance()->PushKey(DIK_W)) {
+		inputDirection.z += 1.0f;
+	}
+	if (Input::GetInstance()->PushKey(DIK_S)) {
+		inputDirection.z -= 1.0f;
+	}
+
+	// 入力があるかチェック
+	if (Length(inputDirection) > 0.0f) {
+		// 入力方向を正規化して保存
+		attackDirection_ = Normalize(inputDirection);
+	} else {
+		// 入力が無い場合は、向いている角度から攻撃方向を計算する
+		
+		// atan2(x,y)逆で、角度からベクトルを計算
+		attackDirection_ = Vector3{
+			std::sin(worldTransform_.rotation_.y),
+			0.0f,
+			std::cos(worldTransform_.rotation_.y)
+		};
+
+		// 正規化
+		attackDirection_ = Normalize(attackDirection_);
+	}
+}
+
+void Player::BehaviorDodgeInitialize() {
+	// カウンターを初期化
+	dodgeParameter_ = 0.0f;
+	// フェーズを「Main」に設定
+	dodgePhase_ = DodgePhase::Main;
+	// 無敵フラグを立てる
+	isInvincible_ = true;
+	// 回避方向をリセット
+	dodgeDirection_ = {};
+
+	// ----- 回避方向の決定 -----
+	// 現在のキー入力状態から決定する
+	Vector3 inputDirection = {};
+	if (Input::GetInstance()->PushKey(DIK_D)) {
+		inputDirection.x += 1.0f;
+	}
+	if (Input::GetInstance()->PushKey(DIK_A)) {
+		inputDirection.x -= 1.0f;
+	}
+	if (Input::GetInstance()->PushKey(DIK_W)) {
+		inputDirection.z += 1.0f;
+	}
+	if (Input::GetInstance()->PushKey(DIK_S)) {
+		inputDirection.z -= 1.0f;
+	}
+
+	// 入力があるかチェック
+	if (Length(inputDirection) > 0.0f) {
+		// 入力方向を正規化して保存
+		dodgeDirection_ = Normalize(inputDirection);
+	} else {
+	    // 入力が無い場合は、向いている角度から回避方向を計算する
+		
+		// atan2(x,y)逆で、角度からベクトルを計算
+		dodgeDirection_ = Vector3{
+			std::sin(worldTransform_.rotation_.y),
+			0.0f,
+			std::cos(worldTransform_.rotation_.y)
+		};
+
+		// 正規化
+		dodgeDirection_ = Normalize(dodgeDirection_);
+		
+	}
+}
+
+void Player::BehaviorRootUpdate() {
+
+	// 攻撃キーを押したら
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+		// 攻撃ビヘイビアをリクエスト
+		behaviorRequest_ = Behavior::kAttack;
+	}
+
+	// 回避キーを押したら
+	if (Input::GetInstance()->TriggerKey(DIK_LSHIFT)) {
+		// 回避ビヘイビアをリクエスト
+		behaviorRequest_ = Behavior::kDodge;
+		// 回避中は移動やほかの入力処理を実行させない
+		return;
+	}
+
+	// 移動入力
 	Move();
 
-	// 2.移動量を加味して衝突判定する
+	// 回転処理
+	// 速度ベクトル（移動入力）のXとZの長さ（平面上の速度）をチェック
+	float velocityXZLength = std::sqrt(velocity_.x * velocity_.x + velocity_.z * velocity_.z);
+
+	if (velocityXZLength > 0.001f) { // わずかでも移動入力があれば
+		// 目標角度を計算（atan2はラジアンを返す）
+		float targetAngle = std::atan2(velocity_.x, velocity_.z);
+
+		// 現在の角度を取得
+		float currentAngle = worldTransform_.rotation_.y;
+
+		// 最短角度補間で回転させる
+		float newAngle = LerpShortestAngle(
+			currentAngle,  // 現在の角度
+			targetAngle,   // 目標角度
+			kRotationSpeed // 補間係数
+		);
+
+		// 回転を反映
+		worldTransform_.rotation_.y = newAngle;
+		// direction_ の更新
+		float pi = std::numbers::pi_v<float>;
+		if (worldTransform_.rotation_.y > -pi / 4.0f && worldTransform_.rotation_.y <= pi / 4.0f) { // -45度 ～ +45度
+			direction_ = Direction::kFront;
+		} else if (worldTransform_.rotation_.y > pi / 4.0f && worldTransform_.rotation_.y <= 3.0f * pi / 4.0f) { // +45度 ～ +135度
+			direction_ = Direction::kRight;
+		} else if (worldTransform_.rotation_.y > 3.0f * pi / 4.0f || worldTransform_.rotation_.y <= -3.0f * pi / 4.0f) { // +135度以上, -135度以下
+			direction_ = Direction::kBack;
+		} else { // -135度 ～ -45度
+			direction_ = Direction::kLeft;
+		}
+	}
+
+	// 移動量を加味して衝突判定する
 	// 衝突情報を初期化
 	CollisionMapinfo collisionMapInfo;
 	// 移動量に速度の値をコピー
@@ -128,36 +290,19 @@ void Player::BehaviorRootUpdate() {
 	// マップ衝突チェック
 	MapCollisionCheck(collisionMapInfo);
 
-	// 3.判定結果を反映して移動させる
+	// 判定結果を反映して移動させる
 	ApplyCollisionResult(collisionMapInfo);
 
-	// 4.天井に接触している場合の処理
+	// 天井に接触している場合の処理
 	OnCollisionCeiling(collisionMapInfo);
 
-	// 5.壁に接触している場合の処理
+	// 壁に接触している場合の処理
 	OnCollisionWall(collisionMapInfo);
 
-	// 6.接地状態の切り替え
+	// 接地状態の切り替え
 	OnGroundSwitch(collisionMapInfo);
 
-	// 7.旋回制御
-	if (turnTimer_ > 0.0f) {
-		turnTimer_ -= 1.0f / 60.0f;
-
-		// 左右の自キャラ角度テーブル
-		float destinationRotationYTable[] = {
-			std::numbers::pi_v<float> / 2.0f, // 右
-			std::numbers::pi_v<float> *3.0f / 2.0f, // 左
-			0.0f, // 前
-			std::numbers::pi_v<float> // 後
-		};
-		// 状況に応じた角度を取得する
-		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(direction_)];
-		// 自キャラの角度を設定する
-		worldTransform_.rotation_.y = EaseInOutLerpFloat(destinationRotationY, turnFirstRotationY_, turnTimer_ / kTimeTurn);
-	}
-
-	// 8.行列計算
+	// 行列計算
 	UpdateWorldTransform(worldTransform_);
 }
 
@@ -165,10 +310,39 @@ void Player::BehaviorAttackUpdate() {
 	// 攻撃ギミックの経過時間カウンターを更新
 	attackParameter_ += 1.0f / 60.0f; // 1フレームごとに時間を加算
 
+	// --- 回転処理 ---
+	if (Length(attackDirection_) > 0.001f) { // わずかでも攻撃方向があれば
+		// 目標角度を計算（atan2はラジアンを返す）
+		float targetAngle = std::atan2(attackDirection_.x, attackDirection_.z);
+		
+		// 現在の角度を取得
+		float currentAngle = worldTransform_.rotation_.y;
+
+		// 最短角度補間で回転させる
+		float newAngle = LerpShortestAngle(
+			currentAngle,  // 現在の角度
+			targetAngle,   // 目標角度
+			kRotationSpeed // 補間係数
+		);
+		// 回転を反映
+		worldTransform_.rotation_.y = newAngle;
+
+		// direction_ の更新
+		float pi = std::numbers::pi_v<float>;
+		if (worldTransform_.rotation_.y > -pi / 4.0f && worldTransform_.rotation_.y <= pi / 4.0f) { // -45度 ～ +45度
+			direction_ = Direction::kFront;
+		} else if (worldTransform_.rotation_.y > pi / 4.0f && worldTransform_.rotation_.y <= 3.0f * pi / 4.0f) { // +45度 ～ +135度
+			direction_ = Direction::kRight;
+		} else if (worldTransform_.rotation_.y > 3.0f * pi / 4.0f || worldTransform_.rotation_.y <= -3.0f * pi / 4.0f) { // +135度以上, -135度以下
+			direction_ = Direction::kBack;
+		} else { // -135度 ～ -45度
+			direction_ = Direction::kLeft;
+		}
+	}
+
 	CollisionMapinfo collisionMapInfo;
 	Vector3 velocity{};
-	static const Vector3 kAttackVelocity = { 2.0f, 0.0f, 0.0f }; // 突進速度を定数として定義
-
+	
 	switch (attackPhase_) {
 	case AttackPhase::Charge:
 	default:
@@ -194,12 +368,7 @@ void Player::BehaviorAttackUpdate() {
 		worldTransform_.scale_.z = EaseOutLerpFloat(0.3f, 1.3f, t); // 画像の指示に合わせてEaseOutに変更
 		worldTransform_.scale_.y = EaseInLerpFloat(1.6f, 0.7f, t); // 画像の指示に合わせてEaseInに変更
 
-		// 突進時のみ移動を限定する
-		if (direction_ == Direction::kRight) {
-			velocity = kAttackVelocity;
-		} else {
-			velocity = -1.0f * kAttackVelocity;
-		}
+		velocity = attackDirection_ * kAttackSpeed;
 
 		// 余韻動作へと移行
 		if (attackParameter_ >= kRushTime) {
@@ -216,6 +385,10 @@ void Player::BehaviorAttackUpdate() {
 		worldTransform_.scale_.z = EaseOutLerpFloat(1.3f, 1.0f, t); // スケールを通常に戻す
 		worldTransform_.scale_.y = EaseOutLerpFloat(0.7f, 1.0f, t); // スケールを通常に戻す
 
+		// 徐々に減速
+		velocity_.x *= (1.0f - kAttenuation);
+		velocity_.z *= (1.0f - kAttenuation);
+
 		// ルート動作へと移行
 		if (attackParameter_ >= kAftertasteTime) {
 			attackPhase_ = AttackPhase::Charge; // 次の攻撃のためにChargeに戻す
@@ -229,38 +402,121 @@ void Player::BehaviorAttackUpdate() {
 	// 衝突情報を初期化して、velocityを代入
 	collisionMapInfo.moveAmount_ = velocity;
 
-	// ここでUpdateWorldTransformに衝突情報と移動量を渡す
-	worldTransform_.translation_ += collisionMapInfo.moveAmount_;
+	// マップ衝突チェック
+	MapCollisionCheck(collisionMapInfo);
 
-
+	// 判定結果を反映して移動させる
+	ApplyCollisionResult(collisionMapInfo);
+ 
 	// トランスフォームの値をコピー
 	worldTransformAttack_.translation_ = worldTransform_.translation_;
+	
 	// 向きに応じて攻撃モデルの向きを変える
-	switch (direction_) {
-	case Player::Direction::kRight:
-		worldTransformAttack_.rotation_.y = std::numbers::pi_v<float> / 2.0f;
-		break;
-	case Player::Direction::kLeft:
-		worldTransformAttack_.rotation_.y = 3.0f * (std::numbers::pi_v<float> / 2.0f);
-		break;
-	case Player::Direction::kFront:
-		worldTransformAttack_.rotation_.y = 0.0f;
-		break;
-	case Player::Direction::kBack:
-		worldTransformAttack_.rotation_.y = std::numbers::pi_v<float>;
-		break;
-	}
-
+	worldTransformAttack_.rotation_.y = worldTransform_.rotation_.y;
 
 	UpdateWorldTransform(worldTransform_);
 	UpdateWorldTransform(worldTransformAttack_);
 }
 
-void Player::BehaviorRootInitialize() {}
+void Player::BehaviorDodgeUpdate() {
+	// 回避タイマーを更新
+	dodgeParameter_ += 1.0f / 60.0f;
 
-void Player::BehaviorAttackInitialize() {
-	// カウンター初期化
-	attackParameter_ = 0;
+	Vector3 velocity{}; // このフレームでの移動量
+
+	if (Length(dodgeDirection_) > 0.001f) { // わずかでも移動入力があれば
+		// 目標角度を計算（atan2はラジアンを返す）
+		float targetAngle = std::atan2(dodgeDirection_.x, dodgeDirection_.z);
+
+		// 現在の角度を取得
+		float currentAngle = worldTransform_.rotation_.y;
+
+		// 最短角度補間で回転させる
+		float newAngle = LerpShortestAngle(
+			currentAngle,  // 現在の角度
+			targetAngle,   // 目標角度
+			kRotationSpeed // 補間係数
+		);
+
+		// 回転を反映
+		worldTransform_.rotation_.y = newAngle;
+		// direction_ の更新
+		float pi = std::numbers::pi_v<float>;
+		if (worldTransform_.rotation_.y > -pi / 4.0f && worldTransform_.rotation_.y <= pi / 4.0f) { // -45度 ～ +45度
+			direction_ = Direction::kFront;
+		} else if (worldTransform_.rotation_.y > pi / 4.0f && worldTransform_.rotation_.y <= 3.0f * pi / 4.0f) { // +45度 ～ +135度
+			direction_ = Direction::kRight;
+		} else if (worldTransform_.rotation_.y > 3.0f * pi / 4.0f || worldTransform_.rotation_.y <= -3.0f * pi / 4.0f) { // +135度以上, -135度以下
+			direction_ = Direction::kBack;
+		} else { // -135度 ～ -45度
+			direction_ = Direction::kLeft;
+		}
+	}
+
+	// 回避フェーズごとの処理
+	switch (dodgePhase_) {
+	case DodgePhase::Main:
+	default:
+	{
+		// ----- 回避中フェーズ -----
+		// tを 0.0f から 1.0f の範囲にする
+		float t = std::clamp(dodgeParameter_ / kDodgeMainTime, 0.0f, 1.0f);
+
+		// 仮の動作として、スケールを変更する
+		worldTransform_.scale_.x = EaseInOutLerpFloat(1.0f, 0.5f, t);
+		worldTransform_.scale_.y = EaseInOutLerpFloat(1.0f, 1.3f, t);
+
+		// 移動速度をセット
+		velocity = dodgeDirection_ * kDodgeSpeed;
+
+		// 硬直動作へと移行
+		if (dodgeParameter_ >= kDodgeMainTime) {
+			dodgePhase_ = DodgePhase::Aftertaste;
+			dodgeParameter_ = 0.0f; // カウンターリセット
+		}
+	}
+	break;
+	case DodgePhase::Aftertaste:
+	{
+		// ----- 硬直フェーズ -----
+		// tを 0.0f から 1.0f の範囲にする
+		float t = std::clamp(dodgeParameter_ / kDodgeAftertasteTime, 0.0f, 1.0f);
+
+		// 仮の動作として、スケールを元に戻す
+		worldTransform_.scale_.x = EaseInOutLerpFloat(0.5f, 1.0f, t);
+		worldTransform_.scale_.y = EaseInOutLerpFloat(1.3f, 1.0f, t);
+
+		// ここでは移動しない
+		velocity = Vector3{ 0.0f, 0.0f, 0.0f };
+
+		// 硬直時間が終了したらルートビヘイビアに戻る
+		if (dodgeParameter_ >= kDodgeAftertasteTime) {
+			dodgePhase_ = DodgePhase::Main; // 次の回避のためにMainに戻す
+			dodgeParameter_ = 0.0f; // カウンターリセット
+
+			// 無敵フラグを解除
+			isInvincible_ = false;
+			// ルートビヘイビアに戻る
+			behaviorRequest_ = Behavior::kRoot;
+		}
+	}
+	break;
+	}
+	// ----- 回避中のマップ衝突判定と移動 -----
+
+	// 衝突情報を初期化
+	CollisionMapinfo collisionMapInfo;
+	// 移動量を設定
+	collisionMapInfo.moveAmount_ = velocity;
+
+	// マップ衝突チェック
+	MapCollisionCheck(collisionMapInfo);
+
+	// 判定結果を反映して移動させる
+	ApplyCollisionResult(collisionMapInfo);
+
+	// 行列計算
+	UpdateWorldTransform(worldTransform_);
 }
 
 void Player::Move() {
@@ -281,12 +537,6 @@ void Player::Move() {
 			}
 
 			acceleration.x += kAcceleration;
-
-			if (direction_ != Direction::kRight) {
-				direction_ = Direction::kRight;
-				turnFirstRotationY_ = worldTransform_.rotation_.y;
-				turnTimer_ = kTimeTurn;
-			}
 		} else if (Input::GetInstance()->PushKey(DIK_A)) {
 			// 右入力中の左入力
 			if (velocity_.x > 0.0f) {
@@ -295,12 +545,6 @@ void Player::Move() {
 			}
 
 			acceleration.x -= kAcceleration;
-
-			if (direction_ != Direction::kLeft) {
-				direction_ = Direction::kLeft;
-				turnFirstRotationY_ = worldTransform_.rotation_.y;
-				turnTimer_ = kTimeTurn;
-			}
 		}
 		// 加速/減速
 		velocity_.x += acceleration.x;
@@ -324,12 +568,6 @@ void Player::Move() {
 			}
 
 			acceleration.z += kAcceleration;
-
-			if (direction_ != Direction::kFront) {
-				direction_ = Direction::kFront;
-				turnFirstRotationY_ = worldTransform_.rotation_.y;
-				turnTimer_ = kTimeTurn;
-			}
 		} else if (Input::GetInstance()->PushKey(DIK_S)) {
 			// 上入力下の左入力
 			if (velocity_.z > 0.0f) {
@@ -338,12 +576,6 @@ void Player::Move() {
 			}
 
 			acceleration.z -= kAcceleration;
-
-			if (direction_ != Direction::kBack) {
-				direction_ = Direction::kBack;
-				turnFirstRotationY_ = worldTransform_.rotation_.y;
-				turnTimer_ = kTimeTurn;
-			}
 		}
 		// 加速/減速
 		velocity_.z += acceleration.z;
@@ -355,13 +587,13 @@ void Player::Move() {
 		velocity_.z *= (1.0f - kAttenuation);
 	}
 	if (!onGround_) {
-	//	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-	//		// ジャンプ初速
-	//		velocity_ += Vector3(0.0f, kJumpAcceleration, 0.0f);
-	//	}
-	//} else {
-		// 落下速度
-		velocity_ += Vector3(0.0f, -kGravityAcceleration, 0.0f);
+		//	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+		//		// ジャンプ初速
+		//		velocity_ += Vector3{0.0f, kJumpAcceleration, 0.0f};
+		//	}
+		//} else {
+			// 落下速度
+		velocity_ += Vector3{ 0.0f, -kGravityAcceleration, 0.0f };
 		// 落下速度制限
 		velocity_.y = (std::max)(velocity_.y, -kLimitFallSpeed);
 	}
@@ -370,7 +602,7 @@ void Player::Move() {
 
 	if (Input::GetInstance()->PushKey(DIK_UP)) {
 		// ジャンプ初速
-		velocity_ += Vector3(0.0f, kJumpAcceleration, 0.0f);
+		velocity_ += Vector3{ 0.0f, kJumpAcceleration, 0.0f };
 	}
 
 #endif // DEBUG
@@ -402,8 +634,8 @@ void Player::MapCollisionCheckUp(CollisionMapinfo& info) {
 
 	// 複数のブロックをまとめてチェックする
 	for (float y = 0.0f; y <= info.moveAmount_.y; y += mapChipField_->GetChipSize()) {
-		Vector3 checkPosLeftTop = positionNew[static_cast<uint32_t>(Corner::kLeftTop)] - Vector3(0, y, 0);
-		Vector3 checkPosRightTop = positionNew[static_cast<uint32_t>(Corner::kRightTop)] - Vector3(0, y, 0);
+		Vector3 checkPosLeftTop = positionNew[static_cast<uint32_t>(Corner::kLeftTop)] - Vector3{ 0, y, 0 };
+		Vector3 checkPosRightTop = positionNew[static_cast<uint32_t>(Corner::kRightTop)] - Vector3{ 0, y, 0 };
 
 		indexSetLeftTop = mapChipField_->GetMapChipIndexSetByPosition(checkPosLeftTop);
 		indexSetRightTop = mapChipField_->GetMapChipIndexSetByPosition(checkPosRightTop);
@@ -444,8 +676,8 @@ void Player::MapCollisionCheckDown(CollisionMapinfo& info) {
 
 	// 複数のブロックをまとめてチェックする
 	for (float y = 0.0f; y >= info.moveAmount_.y; y -= mapChipField_->GetChipSize()) {
-		Vector3 checkPosLeftBottom = positionNew[static_cast<uint32_t>(Corner::kLeftBottom)] - Vector3(0, y, 0);
-		Vector3 checkPosRightBottom = positionNew[static_cast<uint32_t>(Corner::kRightBottom)] - Vector3(0, y, 0);
+		Vector3 checkPosLeftBottom = positionNew[static_cast<uint32_t>(Corner::kLeftBottom)] - Vector3{ 0, y, 0 };
+		Vector3 checkPosRightBottom = positionNew[static_cast<uint32_t>(Corner::kRightBottom)] - Vector3{ 0, y, 0 };
 
 		indexSetLeftBottom = mapChipField_->GetMapChipIndexSetByPosition(checkPosLeftBottom);
 		indexSetRightBottom = mapChipField_->GetMapChipIndexSetByPosition(checkPosRightBottom);
@@ -486,8 +718,8 @@ void Player::MapCollisionCheckRight(CollisionMapinfo& info) {
 
 	// 複数のブロックをまとめてチェックする
 	for (float x = 0.0f; x <= info.moveAmount_.x; x += mapChipField_->GetChipSize()) {
-		Vector3 checkPosRightBottom = positionNew[static_cast<uint32_t>(Corner::kRightBottom)] - Vector3(x, 0, 0);
-		Vector3 checkPosRightTop = positionNew[static_cast<uint32_t>(Corner::kRightTop)] - Vector3(x, 0, 0);
+		Vector3 checkPosRightBottom = positionNew[static_cast<uint32_t>(Corner::kRightBottom)] - Vector3{ x, 0, 0 };
+		Vector3 checkPosRightTop = positionNew[static_cast<uint32_t>(Corner::kRightTop)] - Vector3{ x, 0, 0 };
 
 		indexSetRightBottom = mapChipField_->GetMapChipIndexSetByPosition(checkPosRightBottom);
 		indexSetRightTop = mapChipField_->GetMapChipIndexSetByPosition(checkPosRightTop);
@@ -528,8 +760,8 @@ void Player::MapCollisionCheckLeft(CollisionMapinfo& info) {
 
 	// 複数のブロックをまとめてチェックする
 	for (float x = 0.0f; x >= info.moveAmount_.x; x -= mapChipField_->GetChipSize()) {
-		Vector3 checkPosLeftBottom = positionNew[static_cast<uint32_t>(Corner::kLeftBottom)] - Vector3(x, 0, 0);
-		Vector3 checkPosLeftTop = positionNew[static_cast<uint32_t>(Corner::kLeftTop)] - Vector3(x, 0, 0);
+		Vector3 checkPosLeftBottom = positionNew[static_cast<uint32_t>(Corner::kLeftBottom)] - Vector3{ x, 0, 0 };
+		Vector3 checkPosLeftTop = positionNew[static_cast<uint32_t>(Corner::kLeftTop)] - Vector3{ x, 0, 0 };
 
 		indexSetLeftBottom = mapChipField_->GetMapChipIndexSetByPosition(checkPosLeftBottom);
 		indexSetLeftTop = mapChipField_->GetMapChipIndexSetByPosition(checkPosLeftTop);
@@ -613,8 +845,8 @@ void Player::OnGroundSwitch(const CollisionMapinfo& info) {
 
 			//// 複数のブロックをまとめてチェックする
 			//for (float y = 0.0f; y >= info.moveAmount_.y; y -= mapChipField_->GetChipSize()) {
-			//	Vector3 checkPosLeftBottom = positionNew[static_cast<uint32_t>(Corner::kLeftBottom)] - Vector3(0, y, 0);
-			//	Vector3 checkPosRightBottom = positionNew[static_cast<uint32_t>(Corner::kRightBottom)] - Vector3(0, y, 0);
+			//	Vector3 checkPosLeftBottom = positionNew[static_cast<uint32_t>(Corner::kLeftBottom)] - Vector3{0, y, 0};
+			//	Vector3 checkPosRightBottom = positionNew[static_cast<uint32_t>(Corner::kRightBottom)] - Vector3{0, y, 0};
 
 			//	indexSetLeftBottom = mapChipField_->GetMapChipIndexSetByPosition(checkPosLeftBottom);
 			//	indexSetRightBottom = mapChipField_->GetMapChipIndexSetByPosition(checkPosRightBottom);
