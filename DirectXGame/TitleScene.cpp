@@ -22,11 +22,11 @@ void TitleScene::Initialize() {
 	worldTransformTitle_.Initialize();
 	worldTransformTitle_.translation_ = Vector3{ 0.0f, 2.0f, 0.0f };
 
-	worldTransformSpace_.Initialize();
-	worldTransformSpace_.translation_ = Vector3{ 2.5f, -1.5f, 0.0f };
+	worldTransformPlayerButton_.Initialize();
+	worldTransformPlayerButton_.translation_ = Vector3{ 2.5f, -1.5f, 0.0f };
 
-	worldTransformADButton_.Initialize();
-	worldTransformADButton_.translation_ = Vector3{ -2.5f, -1.5f, 0.0f };
+	worldTransformMoveButton_.Initialize();
+	worldTransformMoveButton_.translation_ = Vector3{ -2.5f, -1.5f, 0.0f };
 
 	worldTransformBackGround1_.Initialize();
 	worldTransformBackGround1_.translation_ = Vector3{ -30.0f, -15.0f, 20.0f };
@@ -52,23 +52,35 @@ void TitleScene::Initialize() {
 	fade_->Start(Fade::Status::FadeIn, kFadeTime);
 
 	UpdateWorldTransform(worldTransformTitle_);
-	UpdateWorldTransform(worldTransformSpace_);
-	UpdateWorldTransform(worldTransformADButton_);
+	UpdateWorldTransform(worldTransformPlayerButton_);
+	UpdateWorldTransform(worldTransformMoveButton_);
 	UpdateWorldTransform(worldTransformBackGround1_);
 	UpdateWorldTransform(worldTransformBackGround2_);
 	UpdateWorldTransform(worldTransformBackGround3_);
 }
 
 TitleScene::~TitleScene() {
-	// 3Dモデルデータの解放
+	// Modelの解放
 	delete model_;
+	model_ = nullptr;
 	delete modelTitleName_;
+	modelTitleName_ = nullptr;
 	delete modelPlayerButton_;
+	modelPlayerButton_ = nullptr;
+	delete modelMoveButton_;
+	modelMoveButton_ = nullptr;
 	delete modelSkydome_;
+	modelSkydome_ = nullptr;
 	delete modelBackGround_;
+	modelBackGround_ = nullptr;
 
-	delete fade_;
+	// Skydomeの解放
 	delete skydome_;
+	skydome_ = nullptr;
+
+	// Fadeの解放
+	delete fade_;
+	fade_ = nullptr;
 }
 
 void TitleScene::Update() {
@@ -89,7 +101,6 @@ void TitleScene::Update() {
 		if (fade_->IsFinished()) {
 			// フェードインが終了したらメインフェーズに切り替え
 			phase_ = Phase::kMain;
-			fade_->Initialize(); // フェードの値をリセット
 		}
 		break;
 
@@ -137,9 +148,9 @@ void TitleScene::Draw() {
 
 	modelTitleName_->Draw(worldTransformTitle_, camera_);
 
-	modelPlayerButton_->Draw(worldTransformSpace_, camera_);
+	modelPlayerButton_->Draw(worldTransformPlayerButton_, camera_);
 
-	modelMoveButton_->Draw(worldTransformADButton_, camera_);
+	modelMoveButton_->Draw(worldTransformMoveButton_, camera_);
 	
 	// 3Dモデル描画後処理
 	Model::PostDraw();

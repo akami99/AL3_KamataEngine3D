@@ -29,8 +29,8 @@ private:
 
 	KamataEngine::WorldTransform worldTransform_;
 	KamataEngine::WorldTransform worldTransformTitle_;
-	KamataEngine::WorldTransform worldTransformSpace_;
-	KamataEngine::WorldTransform worldTransformADButton_;
+	KamataEngine::WorldTransform worldTransformPlayerButton_;
+	KamataEngine::WorldTransform worldTransformMoveButton_;
 	KamataEngine::WorldTransform worldTransformBackGround1_;
 	KamataEngine::WorldTransform worldTransformBackGround2_;
 	KamataEngine::WorldTransform worldTransformBackGround3_;

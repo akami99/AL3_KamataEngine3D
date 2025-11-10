@@ -14,6 +14,11 @@ void Fade::Initialize() {
 	sprite_->SetColor(Vector4(0, 0, 0, 1));
 }
 
+Fade::~Fade() {
+	delete sprite_;
+	sprite_ = nullptr;
+}
+
 void Fade::Update() {
 	switch (status_) {
 	case Status::None:

@@ -44,13 +44,21 @@ void GameClearScene::Initialize() {
 }
 
 GameClearScene::~GameClearScene() {
-	// 3Dモデルデータの解放
+	// Modelの解放
 	delete modelClearName_;
+	modelClearName_ = nullptr;
 	delete modelSkydome_;
+	modelSkydome_ = nullptr;
 	delete modelBackGround_;
+	modelBackGround_ = nullptr;
 
-	delete fade_;
+	// Skydomeの解放
 	delete skydome_;
+	skydome_ = nullptr;
+
+	// Fadeの解放
+	delete fade_;
+	fade_ = nullptr;
 }
 
 void GameClearScene::Update() {
@@ -70,7 +78,6 @@ void GameClearScene::Update() {
 		fade_->Update();
 		if (fade_->IsFinished()) {
 			phase_ = Phase::kMain;
-			fade_->Initialize();
 		}
 		break;
 

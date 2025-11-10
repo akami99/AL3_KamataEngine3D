@@ -116,21 +116,9 @@ void GameScene::Initialize() {
 }
 
 GameScene::~GameScene() {
-	// 3Dモデルデータの解放
-	delete model_;
-	delete modelAttack_;
-	delete modelParticle_;
-	delete modelBlock_;
-	delete modelSkydome_;
-	delete modelEnemy_;
-	delete modelDoor_;
-	delete modelBackGround_;
-	// 自キャラの解放
-	delete player_;
-	if (deathParticles_ != nullptr) {
-		delete deathParticles_;
-		deathParticles_ = nullptr;
-	}
+	// フェード用オブジェクトの解放
+	delete fade_;
+	fade_ = nullptr;
 	// 敵キャラの解放
 	for (Enemy* enemy : enemies_) {
 		// newで確保したメモリをdeleteで解放
@@ -138,27 +126,49 @@ GameScene::~GameScene() {
 	}
 	// コンテナ自体を空にする
 	enemies_.clear();
-
-	// マップチップフィールドの解放
-	delete mapChipField_;
-	// 天球の解放
-	delete skydome_;
-
-	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
-		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
-			delete worldTransformBlock;
+	// ブロックの解放
+	for (auto& row : worldTransformBlocks_) {
+		for (KamataEngine::WorldTransform* transform : row) {
+			delete transform;
 		}
+		row.clear();
 	}
 	worldTransformBlocks_.clear();
-
+	// マップチップフィールドの解放
+	delete mapChipField_;
+	mapChipField_ = nullptr;
+	// 天球の解放
+	delete skydome_;
+	skydome_ = nullptr;
+	// 自キャラの解放
+	delete player_;
+	player_ = nullptr;
+	if (deathParticles_ != nullptr) {
+		delete deathParticles_;
+		deathParticles_ = nullptr;
+	}
+	// 追従カメラの解放
 	delete cameraController_;
-
+	delete door_;
 	// デバッグカメラの解放
 	delete debugCamera_;
-
-	delete fade_;
-
-	delete door_;
+	// 3Dモデルデータの解放
+	delete model_;
+	model_ = nullptr;
+	delete modelAttack_;
+	modelAttack_ = nullptr;
+	delete modelParticle_;
+	modelParticle_ = nullptr;
+	delete modelBlock_;
+	modelBlock_ = nullptr;
+	delete modelSkydome_;
+	modelSkydome_ = nullptr;
+	delete modelEnemy_;
+	modelEnemy_ = nullptr;
+	delete modelDoor_;
+	modelDoor_ = nullptr;
+	delete modelBackGround_;
+	modelBackGround_ = nullptr;
 }
 
 void GameScene::Update() {

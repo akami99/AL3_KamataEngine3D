@@ -71,19 +71,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		dxCommon->PostDraw();
 
 	}
+	// 終了時、シーンオブジェクトが残っていたら解放する
+	// タイトルシーンの解放
+	if (titleScene) {
+		delete titleScene;
+		titleScene = nullptr;
+	}
+	// ゲームシーンの解放
+	if (gameScene) {
+		delete gameScene;
+		gameScene = nullptr;
+	}
+	// ゲームクリアシーンの解放
+	if (gameClearScene) {
+		delete gameClearScene;
+		gameClearScene = nullptr;
+	}
 
 	// エンジンの終了処理
 	KamataEngine::Finalize();
-
-	delete titleScene;
-	titleScene = nullptr;
-	// ゲームシーンの解放
-	delete gameScene;
-	// nullptrの代入
-	gameScene = nullptr;
-	// ゲームクリアシーンの解放
-	delete gameClearScene;
-	gameClearScene = nullptr;
 
 	return 0;
 }

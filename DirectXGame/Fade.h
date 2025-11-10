@@ -32,6 +32,9 @@ public:
 	/// </summary>
 	void Initialize();
 
+	// デストラクタ
+	~Fade();
+
 	/// <summary>
 	/// 更新
 	/// <summary>
