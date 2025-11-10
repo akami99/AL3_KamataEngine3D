@@ -33,7 +33,7 @@ void DrawScene();
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
 	// エンジンの初期化
-	KamataEngine::Initialize(L"LE2B_01_アカミネ_レン_KARAKURI");
+	KamataEngine::Initialize(L"LE2B_01_アカミネ_レン_うつろうハガネ");
 
 	// DirectXCommonインスタンスの取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
