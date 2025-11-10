@@ -77,6 +77,12 @@ void TitleScene::Update() {
 	// 天球の更新
 	skydome_->Update();
 
+	// スペースキーを押したらフェードアウトを開始する
+	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+		fade_->Start(Fade::Status::FadeOut, kFadeTime); // フェードアウト開始
+		phase_ = Phase::kFadeOut;
+	}
+
 	switch (phase_) {
 	case Phase::kFadeIn: // フェードインフェーズ
 		fade_->Update();
@@ -88,20 +94,6 @@ void TitleScene::Update() {
 		break;
 
 	case Phase::kMain: // メインフェーズ
-		// メイン部ではスペースキーを押したらフェードアウトを開始する
-		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-			fade_->Start(Fade::Status::FadeOut, kFadeTime); // フェードアウト開始
-			phase_ = Phase::kFadeOut;
-		}
-
-		// タイトルアニメーションなど、メインの更新処理
-		counter_ += returnT_ * (1.0f / 60.0f);
-		if (counter_ >= kDuration || counter_ <= 0.0f) {
-			returnT_ *= -1.0f;
-		}
-		t = counter_ / kDuration;
-		worldTransformTitle_.translation_.y = std::clamp((1.0f - t), 0.0f, 1.0f) + kOriginePos;
-
 		break;
 
 	case Phase::kFadeOut: // フェードアウトフェーズ
@@ -112,6 +104,13 @@ void TitleScene::Update() {
 		}
 		break;
 	}
+	// タイトルアニメーションなどの更新処理
+	counter_ += returnT_ * (1.0f / 60.0f);
+	if (counter_ >= kDuration || counter_ <= 0.0f) {
+		returnT_ *= -1.0f;
+	}
+	t = counter_ / kDuration;
+	worldTransformTitle_.translation_.y = std::clamp((1.0f - t), 0.0f, 1.0f) + kOriginePos;
 
 	UpdateWorldTransform(worldTransform_);
 	UpdateWorldTransform(worldTransformTitle_);

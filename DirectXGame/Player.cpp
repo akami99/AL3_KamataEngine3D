@@ -55,6 +55,7 @@ void Player::Initialize(Model* model, Model* modelAttack, Camera* camera, const 
 	worldTransformAttack_.Initialize();
 	worldTransformAttack_.translation_ = position;
 	worldTransformAttack_.rotation_.y = std::numbers::pi_v<float> / 2.0f;
+	worldTransformAttack_.scale_ = { 0.0f, 0.0f, 0.0f }; // 最初は非表示
 }
 
 void Player::Update() {
@@ -100,8 +101,9 @@ void Player::Update() {
 void Player::Draw() {
 	// 3Dモデルを描画
 	model_->Draw(worldTransform_, *camera_);
-	
+
 	if (attackPhase_ == AttackPhase::Rush) {
+		// 攻撃エフェクトモデルを描画
 		modelAttack_->Draw(worldTransformAttack_, *camera_);
 	}
 }
@@ -421,15 +423,28 @@ void Player::BehaviorAttackUpdate() {
 
 	// 判定結果を反映して移動させる
 	ApplyCollisionResult(collisionMapInfo);
- 
-	// トランスフォームの値をコピー
-	worldTransformAttack_.translation_ = worldTransform_.translation_;
-	
+
 	// 向きに応じて攻撃モデルの向きを変える
-	worldTransformAttack_.rotation_.y = worldTransform_.rotation_.y;
+	worldTransformAttack_.rotation_ = worldTransform_.rotation_;
+
+	// エフェクト位置の調整
+	Vector3 offset = attackDirection_ * kEffectOffsetLength; // 攻撃方向にオフセット
+
+	// トランスフォームに反映
+	worldTransformAttack_.translation_ = worldTransform_.translation_ + offset;
+
+	// エフェクトのスケールはフェーズに応じて制御
+	if (attackPhase_ == AttackPhase::Rush) {
+		// 突進フェーズではフルスケール
+		worldTransformAttack_.scale_ = { 1.0f, 1.0f, 1.0f };
+	} else {
+		// それ以外のフェーズでは非表示
+		worldTransformAttack_.scale_ = { 0.0f, 0.0f, 0.0f };
+	}
+
+	UpdateWorldTransform(worldTransformAttack_);
 
 	UpdateWorldTransform(worldTransform_);
-	UpdateWorldTransform(worldTransformAttack_);
 }
 
 void Player::BehaviorDodgeUpdate() {

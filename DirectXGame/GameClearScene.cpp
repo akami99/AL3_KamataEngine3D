@@ -59,6 +59,12 @@ void GameClearScene::Update() {
 	// 天球の更新
 	skydome_->Update();
 
+	// スペースキーを押すとフェードアウトを開始する
+	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+		fade_->Start(Fade::Status::FadeOut, kFadeTime);
+		phase_ = Phase::kFadeOut;
+	}
+
 	switch (phase_) {
 	case Phase::kFadeIn:
 		fade_->Update();
@@ -69,19 +75,6 @@ void GameClearScene::Update() {
 		break;
 
 	case Phase::kMain:
-		// スペースキーを押すとフェードアウトを開始する
-		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-			fade_->Start(Fade::Status::FadeOut, kFadeTime);
-			phase_ = Phase::kFadeOut;
-		}
-
-		// タイトルと同じく、Clearの文字をアニメーションさせる
-		counter_ += returnT_ * (1.0f / 60.0f);
-		if (counter_ >= kDuration || counter_ <= 0.0f) {
-			returnT_ *= -1.0f;
-		}
-		t = counter_ / kDuration;
-		worldTransformClear_.translation_.y = std::clamp((1.0f - t), 0.0f, 1.0f) + kOriginePos;
 
 		break;
 
@@ -92,6 +85,14 @@ void GameClearScene::Update() {
 		}
 		break;
 	}
+
+	// タイトルと同じく、Clearの文字をアニメーションさせる
+	counter_ += returnT_ * (1.0f / 60.0f);
+	if (counter_ >= kDuration || counter_ <= 0.0f) {
+		returnT_ *= -1.0f;
+	}
+	t = counter_ / kDuration;
+	worldTransformClear_.translation_.y = std::clamp((1.0f - t), 0.0f, 1.0f) + kOriginePos;
 
 	UpdateWorldTransform(worldTransformClear_);
 	camera_.UpdateMatrix();

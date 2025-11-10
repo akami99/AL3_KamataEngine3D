@@ -131,13 +131,16 @@ private:
 	static inline const float kRushTime = 0.02f;
 	static inline const float kAftertasteTime = 0.4f;
 
+	// 攻撃エフェクト
+	static inline const float kEffectOffsetLength = 2.0f; // 攻撃エフェクトのオフセット
+
 	// デスフラグ
 	bool isDead_ = false;
 
 	// 回避ギミックの経過時間カウンター
 	float dodgeParameter_ = 0.0f;
 	// 回避時間<秒>
-	static inline const float kDodgeMainTime = 0.2f;       // 回避行動の継続時間
+	static inline const float kDodgeMainTime = 0.15f;       // 回避行動の継続時間
 	static inline const float kDodgeAftertasteTime = 0.1f; // スケールを戻す時間
 	// 回避速度
 	static inline const float kDodgeSpeed = 0.5f; // 回避行動の速度
