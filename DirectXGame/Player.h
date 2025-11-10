@@ -87,6 +87,8 @@ private:
 
 	// 速度
 	KamataEngine::Vector3 velocity_ = {};
+	// 攻撃開始時の位置を記憶
+	KamataEngine::Vector3 originalPosition_ = {};
 	// 加速度
 	static inline const float kAcceleration = 0.05f;
 	// 減速度
@@ -189,6 +191,12 @@ public:
 	// 無敵フラグのgetter
 	bool IsInvincible() const {
 		return isInvincible_;
+	}
+
+	// カメラの追従を停止するかどうかのGetter
+	bool IsCameraStop() const {
+		// 攻撃中ならカメラの追従を停止
+		return behavior_ == Behavior::kAttack;
 	}
 
 	void SetMapChipField(MapChipField* mapChipField) {

@@ -100,7 +100,7 @@ void Player::Update() {
 void Player::Draw() {
 	// 3Dモデルを描画
 	model_->Draw(worldTransform_, *camera_);
-
+	
 	if (attackPhase_ == AttackPhase::Rush) {
 		modelAttack_->Draw(worldTransformAttack_, *camera_);
 	}
@@ -147,6 +147,8 @@ void Player::BehaviorAttackInitialize() {
 	attackPhase_ = AttackPhase::Charge;
 	// 攻撃方向をリセット
 	attackDirection_ = {};
+	// 攻撃開始時の位置を保存
+	originalPosition_ = worldTransform_.translation_;
 
 	// ----- 攻撃方向の決定 -----
 	// 現在のキー入力状態から決定する
@@ -385,12 +387,24 @@ void Player::BehaviorAttackUpdate() {
 		worldTransform_.scale_.z = EaseOutLerpFloat(1.3f, 1.0f, t); // スケールを通常に戻す
 		worldTransform_.scale_.y = EaseOutLerpFloat(0.7f, 1.0f, t); // スケールを通常に戻す
 
+		// 元の位置に戻るためのLerp
+		Vector3 nextPosition = Lerp(
+			originalPosition_,               // 開始位置
+			worldTransform_.translation_, // 突進終了位置
+			1.0f - t                                 // 0.0f ～ 1.0f の範囲
+		);
+
+		// 速度ベクトルを計算し、元の位置に戻る動きを作る
+		velocity = nextPosition - worldTransform_.translation_;
+
+
 		// 徐々に減速
-		velocity_.x *= (1.0f - kAttenuation);
-		velocity_.z *= (1.0f - kAttenuation);
+		/*velocity_.x *= (1.0f - kAttenuation);
+		velocity_.z *= (1.0f - kAttenuation);*/
 
 		// ルート動作へと移行
 		if (attackParameter_ >= kAftertasteTime) {
+			worldTransform_.translation_ = originalPosition_; // 位置を元に戻す
 			attackPhase_ = AttackPhase::Charge; // 次の攻撃のためにChargeに戻す
 			attackParameter_ = 0.0f; // カウンターリセット
 			behaviorRequest_ = Behavior::kRoot; // ルートビヘイビアに戻る
