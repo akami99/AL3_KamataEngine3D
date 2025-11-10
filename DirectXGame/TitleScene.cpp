@@ -10,8 +10,8 @@ void TitleScene::Initialize() {
 	// 3Dモデルデータの生成
 	model_ = Model::CreateFromOBJ("player", true);
 	modelTitleName_ = Model::CreateFromOBJ("title", true);
-	modelSpace_ = Model::CreateFromOBJ("space", true);
-	modelADButton_ = Model::CreateFromOBJ("adButton", true);
+	modelPlayerButton_ = Model::CreateFromOBJ("playerButton", true);
+	modelMoveButton_ = Model::CreateFromOBJ("moveButton", true);
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 	modelBackGround_ = Model::CreateFromOBJ("background", true);
 
@@ -63,7 +63,7 @@ TitleScene::~TitleScene() {
 	// 3Dモデルデータの解放
 	delete model_;
 	delete modelTitleName_;
-	delete modelSpace_;
+	delete modelPlayerButton_;
 	delete modelSkydome_;
 	delete modelBackGround_;
 
@@ -137,9 +137,9 @@ void TitleScene::Draw() {
 
 	modelTitleName_->Draw(worldTransformTitle_, camera_);
 
-	modelSpace_->Draw(worldTransformSpace_, camera_);
+	modelPlayerButton_->Draw(worldTransformSpace_, camera_);
 
-	modelADButton_->Draw(worldTransformADButton_, camera_);
+	modelMoveButton_->Draw(worldTransformADButton_, camera_);
 	
 	// 3Dモデル描画後処理
 	Model::PostDraw();

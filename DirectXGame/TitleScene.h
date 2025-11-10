@@ -22,8 +22,8 @@ private:
 	// 3Dモデルデータ
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Model* modelTitleName_ = nullptr;
-	KamataEngine::Model* modelSpace_ = nullptr;
-	KamataEngine::Model* modelADButton_ = nullptr;
+	KamataEngine::Model* modelPlayerButton_ = nullptr;
+	KamataEngine::Model* modelMoveButton_ = nullptr;
 	KamataEngine::Model* modelSkydome_ = nullptr;
 	KamataEngine::Model* modelBackGround_ = nullptr;
 
