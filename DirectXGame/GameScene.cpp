@@ -36,16 +36,16 @@ void GameScene::Initialize() {
 	skydome_->Initialize(modelSkydome_, &camera_);
 
 	worldTransformBackGround1_.Initialize();
-	worldTransformBackGround1_.translation_ = Vector3{ 10.0f, -6.0f, 0.0f };
+	worldTransformBackGround1_.translation_ = Vector3{ 10.0f, -6.0f, 20.0f };
 
 	worldTransformBackGround2_.Initialize();
-	worldTransformBackGround2_.translation_ = Vector3{ 40.0f, -6.0f, 0.0f };
+	worldTransformBackGround2_.translation_ = Vector3{ 40.0f, -6.0f, 20.0f };
 
 	worldTransformBackGround3_.Initialize();
-	worldTransformBackGround3_.translation_ = Vector3{ 70.0f, -6.0f, 0.0f };
+	worldTransformBackGround3_.translation_ = Vector3{ 70.0f, -6.0f, 20.0f };
 
 	worldTransformBackGround4_.Initialize();
-	worldTransformBackGround4_.translation_ = Vector3{ 100.0f, -6.0f, 0.0f };
+	worldTransformBackGround4_.translation_ = Vector3{ 100.0f, -6.0f, 20.0f };
 
 
 	// 自キャラの生成
@@ -56,26 +56,26 @@ void GameScene::Initialize() {
 	player_->Initialize(model_, modelAttack_, &camera_, playerPosition);
 
 	// 敵キャラの生成
-	//1段目
-	GenarateEnemies(23, 18);
-	GenarateEnemies(44, 18);
-	GenarateEnemies(74, 18);
-	GenarateEnemies(83, 18);
-	//2段目
-	GenarateEnemies(17, 13);
-	GenarateEnemies(28, 13);
-	GenarateEnemies(70, 13);
-	GenarateEnemies(80, 13);
-	//3段目
-	GenarateEnemies(24, 8);
-	GenarateEnemies(40, 8);
-	GenarateEnemies(66, 8);
-	GenarateEnemies(86, 8);
-	//4段目
-	GenarateEnemies(20, 3);
-	GenarateEnemies(35, 3);
-	GenarateEnemies(61, 3);
-	GenarateEnemies(78, 3);
+	////1段目
+	//GenarateEnemies(23, 18);
+	//GenarateEnemies(44, 18);
+	//GenarateEnemies(74, 18);
+	//GenarateEnemies(83, 18);
+	////2段目
+	//GenarateEnemies(17, 13);
+	//GenarateEnemies(28, 13);
+	//GenarateEnemies(70, 13);
+	//GenarateEnemies(80, 13);
+	////3段目
+	//GenarateEnemies(24, 8);
+	//GenarateEnemies(40, 8);
+	//GenarateEnemies(66, 8);
+	//GenarateEnemies(86, 8);
+	////4段目
+	//GenarateEnemies(20, 3);
+	//GenarateEnemies(35, 3);
+	//GenarateEnemies(61, 3);
+	//GenarateEnemies(78, 3);
 
 	// マップチップフィールドの参照をセット
 	player_->SetMapChipField(mapChipField_);
