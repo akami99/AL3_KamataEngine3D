@@ -66,11 +66,11 @@ void GameScene::Initialize() {
 	//GenarateEnemies(28, 13);
 	//GenarateEnemies(70, 13);
 	//GenarateEnemies(80, 13);
-	////3段目
-	//GenarateEnemies(24, 8);
-	//GenarateEnemies(40, 8);
-	//GenarateEnemies(66, 8);
-	//GenarateEnemies(86, 8);
+	//3段目
+	GenarateEnemies(24, 8);
+	GenarateEnemies(40, 8);
+	GenarateEnemies(66, 8);
+	GenarateEnemies(86, 8);
 	////4段目
 	//GenarateEnemies(20, 3);
 	//GenarateEnemies(35, 3);

@@ -89,14 +89,14 @@ void TitleScene::Update() {
 	// 天球の更新
 	skydome_->Update();
 
-	// スペースキーを押したらフェードアウトを開始する
-	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-		fade_->Start(Fade::Status::FadeOut, kFadeTime); // フェードアウト開始
-		phase_ = Phase::kFadeOut;
-	}
-
 	switch (phase_) {
 	case Phase::kFadeIn: // フェードインフェーズ
+		// スペースキーを押したらフェードアウトを開始する
+		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+			fade_->Start(Fade::Status::FadeOut, kFadeTime); // フェードアウト開始
+			phase_ = Phase::kFadeOut;
+		}
+
 		fade_->Update();
 		if (fade_->IsFinished()) {
 			// フェードインが終了したらメインフェーズに切り替え
@@ -105,6 +105,11 @@ void TitleScene::Update() {
 		break;
 
 	case Phase::kMain: // メインフェーズ
+		// スペースキーを押したらフェードアウトを開始する
+		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+			fade_->Start(Fade::Status::FadeOut, kFadeTime); // フェードアウト開始
+			phase_ = Phase::kFadeOut;
+		}
 		break;
 
 	case Phase::kFadeOut: // フェードアウトフェーズ

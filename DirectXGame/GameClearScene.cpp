@@ -67,14 +67,14 @@ void GameClearScene::Update() {
 	// 天球の更新
 	skydome_->Update();
 
-	// スペースキーを押すとフェードアウトを開始する
-	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-		fade_->Start(Fade::Status::FadeOut, kFadeTime);
-		phase_ = Phase::kFadeOut;
-	}
-
 	switch (phase_) {
 	case Phase::kFadeIn:
+		// スペースキーを押すとフェードアウトを開始する
+		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+			fade_->Start(Fade::Status::FadeOut, kFadeTime);
+			phase_ = Phase::kFadeOut;
+		}
+
 		fade_->Update();
 		if (fade_->IsFinished()) {
 			phase_ = Phase::kMain;
@@ -82,7 +82,11 @@ void GameClearScene::Update() {
 		break;
 
 	case Phase::kMain:
-
+		// スペースキーを押すとフェードアウトを開始する
+		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+			fade_->Start(Fade::Status::FadeOut, kFadeTime);
+			phase_ = Phase::kFadeOut;
+		}
 		break;
 
 	case Phase::kFadeOut:

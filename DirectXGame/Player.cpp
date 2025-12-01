@@ -8,6 +8,7 @@
 #include <numbers>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 using namespace KamataEngine;
 
@@ -286,6 +287,7 @@ void Player::BehaviorRootUpdate() {
 	}
 
 	// 移動量を加味して衝突判定する
+	
 	// 衝突情報を初期化
 	CollisionMapinfo collisionMapInfo;
 	// 移動量に速度の値をコピー
@@ -372,6 +374,12 @@ void Player::BehaviorAttackUpdate() {
 		worldTransform_.scale_.z = EaseOutLerpFloat(0.3f, 1.3f, t); // 画像の指示に合わせてEaseOutに変更
 		worldTransform_.scale_.y = EaseInLerpFloat(1.6f, 0.7f, t); // 画像の指示に合わせてEaseInに変更
 
+		 float length = Length(attackDirection_); 
+		 if (std::abs(length - 1.0f) > 0.001f) { 
+		     // 長さが1.0fからずれている場合は問題あり
+			 std::cout << "Warning: attackDirection_ is not normalized. Length = " << length << std::endl;
+		 }
+
 		velocity = attackDirection_ * kAttackSpeed;
 
 		// 余韻動作へと移行
@@ -396,13 +404,13 @@ void Player::BehaviorAttackUpdate() {
 			1.0f - t                                 // 0.0f ～ 1.0f の範囲
 		);
 
-		// 速度ベクトルを計算し、元の位置に戻る動きを作る
-		velocity = nextPosition - worldTransform_.translation_;
-
+		// 座標を直接更新する
+		worldTransform_.translation_ = nextPosition;
 
 		// 徐々に減速
 		/*velocity_.x *= (1.0f - kAttenuation);
 		velocity_.z *= (1.0f - kAttenuation);*/
+		velocity = Vector3{ 0.0f, 0.0f, 0.0f };
 
 		// ルート動作へと移行
 		if (attackParameter_ >= kAftertasteTime) {
@@ -415,14 +423,34 @@ void Player::BehaviorAttackUpdate() {
 	break;
 	}
 
+	// Rushフェーズでのみ衝突判定を通す
+	if (attackPhase_ == AttackPhase::Rush) {
+		// 衝突情報を初期化して、velocityを代入
+		collisionMapInfo.moveAmount_ = velocity;
+		// マップ衝突チェック
+		MapCollisionCheck(collisionMapInfo);
+		// 判定結果を反映して移動させる
+		ApplyCollisionResult(collisionMapInfo);
+
+		// 衝突後の速度を次フレームの Rush フェーズのために同期
+		velocity = collisionMapInfo.moveAmount_;
+	} else if (attackPhase_ == AttackPhase::Aftertaste) {
+		if (attackPhase_ == AttackPhase::Aftertaste) {
+			// 念のため、Aftertasteフェーズでの移動量を0にする
+			velocity = Vector3{ 0.0f, 0.0f, 0.0f };
+		}
+	}
+
 	// 衝突情報を初期化して、velocityを代入
-	collisionMapInfo.moveAmount_ = velocity;
+	//collisionMapInfo.moveAmount_ = velocity;
 
 	// マップ衝突チェック
-	MapCollisionCheck(collisionMapInfo);
+	//MapCollisionCheck(collisionMapInfo);
 
 	// 判定結果を反映して移動させる
-	ApplyCollisionResult(collisionMapInfo);
+	//ApplyCollisionResult(collisionMapInfo);
+
+	velocity = collisionMapInfo.moveAmount_;
 
 	// 向きに応じて攻撃モデルの向きを変える
 	worldTransformAttack_.rotation_ = worldTransform_.rotation_;
@@ -622,9 +650,9 @@ void Player::Move() {
 		//	}
 		//} else {
 			// 落下速度
-		velocity_ += Vector3{ 0.0f, -kGravityAcceleration, 0.0f };
-		// 落下速度制限
-		velocity_.y = (std::max)(velocity_.y, -kLimitFallSpeed);
+		//velocity_ += Vector3{ 0.0f, -kGravityAcceleration, 0.0f };
+		//// 落下速度制限
+		//velocity_.y = (std::max)(velocity_.y, -kLimitFallSpeed);
 	}
 
 #ifdef _DEBUG
@@ -639,8 +667,8 @@ void Player::Move() {
 }
 
 void Player::MapCollisionCheck(CollisionMapinfo& info) {
-	MapCollisionCheckUp(info);
-	MapCollisionCheckDown(info);
+	//MapCollisionCheckUp(info);
+	//MapCollisionCheckDown(info);
 	MapCollisionCheckRight(info);
 	MapCollisionCheckLeft(info);
 }
@@ -679,7 +707,15 @@ void Player::MapCollisionCheckUp(CollisionMapinfo& info) {
 	// ブロックにヒット？
 	if (hit) {
 		// めり込みを排除する方向に移動量を設定する
-		MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSetLeftTop.xIndex, indexSetLeftTop.yIndex);
+		MapChipField::Rect rect;
+		// 左上のブロックで衝突した場合
+		if (mapChipField_->GetMapChipTypeByIndex(indexSetLeftTop.xIndex, indexSetLeftTop.yIndex) == MapChipType::kBlock) {
+			rect = mapChipField_->GetRectByIndex(indexSetLeftTop.xIndex, indexSetLeftTop.yIndex);
+		} else {
+			// 右上のブロックで衝突した場合
+			rect = mapChipField_->GetRectByIndex(indexSetRightTop.xIndex, indexSetRightTop.yIndex);
+		}
+
 		float limitAmount = rect.bottom - (worldTransform_.translation_.y + kHeight / 2.0f);
 		info.moveAmount_.y = (std::min)(info.moveAmount_.y, limitAmount);
 		// 天井に当たったことを記録する
@@ -721,7 +757,15 @@ void Player::MapCollisionCheckDown(CollisionMapinfo& info) {
 	// ブロックにヒット？
 	if (hit) {
 		// めり込みを排除する方向に移動量を設定する
-		MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSetLeftBottom.xIndex, indexSetLeftBottom.yIndex);
+		// どちらのブロックに衝突したかによってRectを取得するブロックを変える
+		MapChipField::Rect rect;
+		if (mapChipField_->GetMapChipTypeByIndex(indexSetLeftBottom.xIndex, indexSetLeftBottom.yIndex) == MapChipType::kBlock) {
+			rect = mapChipField_->GetRectByIndex(indexSetLeftBottom.xIndex, indexSetLeftBottom.yIndex);
+		} else {
+			// 右下のブロックで衝突した場合
+			rect = mapChipField_->GetRectByIndex(indexSetRightBottom.xIndex, indexSetRightBottom.yIndex);
+		}
+
 		float limitAmount = rect.top - (worldTransform_.translation_.y - kHeight / 2.0f);
 		info.moveAmount_.y = (std::max)(info.moveAmount_.y, limitAmount);
 		// 地面に当たったことを記録する
@@ -763,8 +807,21 @@ void Player::MapCollisionCheckRight(CollisionMapinfo& info) {
 	// ブロックにヒット？
 	if (hit) {
 		// めり込みを排除する方向に移動量を設定する
-		MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSetRightTop.xIndex, indexSetRightTop.yIndex);
+		MapChipField::Rect rect;
+		// 右下のブロックで衝突した場合
+		if (mapChipField_->GetMapChipTypeByIndex(indexSetRightBottom.xIndex, indexSetRightBottom.yIndex) == MapChipType::kBlock) {
+			rect = mapChipField_->GetRectByIndex(indexSetRightBottom.xIndex, indexSetRightBottom.yIndex);
+		} else {
+			// 右上のブロックで衝突した場合
+			rect = mapChipField_->GetRectByIndex(indexSetRightTop.xIndex, indexSetRightTop.yIndex);
+		}
+
 		float limitAmount = rect.left - (worldTransform_.translation_.x + kWidth / 2.0f);
+
+		// プレイヤーが完全にブロックの境界線に張り付くのを防ぐため、微小なオフセット(kBlankなど)を適用
+		// limitAmount が負の値（左方向の排除量）であることを前提に、さらに左に微小移動させる
+		limitAmount -= kBlank;
+
 		info.moveAmount_.x = (std::min)(info.moveAmount_.x, limitAmount);
 		// 壁に当たったことを記録する
 		info.onCollisionWall_ = true;
@@ -805,8 +862,19 @@ void Player::MapCollisionCheckLeft(CollisionMapinfo& info) {
 	// ブロックにヒット？
 	if (hit) {
 		// めり込みを排除する方向に移動量を設定する
-		MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSetLeftTop.xIndex, indexSetLeftTop.yIndex);
+		MapChipField::Rect rect;
+		// 左下のブロックで衝突した場合
+		if (mapChipField_->GetMapChipTypeByIndex(indexSetLeftBottom.xIndex, indexSetLeftBottom.yIndex) == MapChipType::kBlock) {
+			rect = mapChipField_->GetRectByIndex(indexSetLeftBottom.xIndex, indexSetLeftBottom.yIndex);
+		} else {
+			// 左上のブロックで衝突した場合
+			rect = mapChipField_->GetRectByIndex(indexSetLeftTop.xIndex, indexSetLeftTop.yIndex);
+		}
+
 		float limitAmount = rect.right - (worldTransform_.translation_.x - kWidth / 2.0f);
+		
+		limitAmount += kBlank;
+		
 		info.moveAmount_.x = (std::max)(info.moveAmount_.x, limitAmount);
 		// 壁に当たったことを記録する
 		info.onCollisionWall_ = true;
@@ -850,8 +918,21 @@ void Player::OnCollisionWall(const CollisionMapinfo& info) {
 	// 壁に当たった？
 	if (info.onCollisionWall_) {
 		// 速度をゼロにする
-		velocity_.x = 0.0f;
-		velocity_.z = 0.0f;
+
+		// X軸の速度リセット判定:
+		// 元の速度の大きさと比較し、衝突後の移動量が十分に小さい場合のみ速度をリセットする
+		// 衝突によりX軸の移動量が大きく制限された場合
+		if (std::abs(info.moveAmount_.x) < std::abs(velocity_.x) * 0.5f) { // 例: 50%以上の減衰があった場合
+			velocity_.x = 0.0f;
+		}
+
+		// Z軸の速度リセット判定:
+		// 衝突によりZ軸の移動量が大きく制限された場合
+		if (std::abs(info.moveAmount_.z) < std::abs(velocity_.z) * 0.5f) { // 例: 50%以上の減衰があった場合
+			velocity_.z = 0.0f;
+		}
+
+		// Y軸
 	}
 }
 

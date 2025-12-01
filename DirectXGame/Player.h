@@ -110,8 +110,8 @@ private:
 	static inline const float kJumpAcceleration = 0.1f;
 
 	// キャラクターの当たり判定サイズ(実際に使う際に調整する部分)
-	static inline const float kWidth = 0.9f;
-	static inline const float kHeight = 0.9f;
+	static inline const float kWidth = 1.0f;
+	static inline const float kHeight = 1.0f;
 
 	static inline const float kBlank = 0.01f; // 当たり判定のブランク値
 	static inline const float kCollisionOffsetBottom = 0.01f;

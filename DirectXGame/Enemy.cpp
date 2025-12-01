@@ -23,7 +23,7 @@ void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
 	// ワールド変換の初期化
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = position;
-	worldTransform_.rotation_.y = std::numbers::pi_v<float> / 2.0f;
+	//worldTransform_.rotation_.y = std::numbers::pi_v<float> / 2.0f;
 
 	// 速度を設定する
 	velocity_ = Vector3{ -kWalkSpeed, 0.0f, 0.0f };
