@@ -5,8 +5,6 @@
 
 class Enemy;
 
-class MapChipField;
-
 /// <summary>
 /// 自キャラ
 /// </summary>
@@ -82,8 +80,6 @@ private:
 	KamataEngine::Model* modelAttack_ = nullptr;
 	// カメラ
 	KamataEngine::Camera* camera_ = nullptr;
-	// マップチップによるフィールド
-	MapChipField* mapChipField_ = nullptr;
 
 	// 速度
 	KamataEngine::Vector3 velocity_ = {};
@@ -202,10 +198,6 @@ public:
 		return behavior_ == Behavior::kAttack;
 	}
 
-	void SetMapChipField(MapChipField* mapChipField) {
-		mapChipField_ = mapChipField;
-	}
-
 private:
 	// 通常行動初期化
 	void BehaviorRootInitialize();
@@ -229,6 +221,8 @@ private:
 	/// 移動処理
 	/// </summary>
 	void Move();
+
+#if 0 // マップチップ衝突判定を無効化
 
 	/// <summary>
 	/// マップの衝突情報をチェック
@@ -259,6 +253,8 @@ private:
 	/// </summary>
 	/// <param name="info">衝突判定に使用するCollisionMapinfo構造体への参照</param>
 	void MapCollisionCheckLeft(CollisionMapinfo& info);
+
+#endif // #if 0: マップチップ衝突判定の無効化を終了
 
 	/// <summary>
 	/// 中心座標とコーナー種別から、指定されたコーナーの座標を計算

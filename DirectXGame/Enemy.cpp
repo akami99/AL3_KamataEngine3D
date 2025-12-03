@@ -35,6 +35,25 @@ void Enemy::Update() {
 	// 移動
 	worldTransform_.translation_ += velocity_;
 
+	// 巡回タイマーを加算
+	patrolTimer_ += 1.0f / 60.0f;
+
+	// 巡回時間を超えたら方向転換
+	if (patrolTimer_ >= kTimePatrol) {
+		// タイマーをリセット
+		patrolTimer_ = 0.0f;
+
+		// 方向を反転
+		if (lrDirection_ == LRDirection::kLeft) {
+			lrDirection_ = LRDirection::kRight;
+		} else {
+			lrDirection_ = LRDirection::kLeft;
+		}
+
+		// 速度を反転
+		velocity_ = -1.0f * velocity_;
+	}
+
 	// 旋回制御
 	// 左右の自キャラ角度テーブル
 	float destinationRotationYTable[] = {

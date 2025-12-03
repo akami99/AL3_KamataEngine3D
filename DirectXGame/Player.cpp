@@ -3,7 +3,6 @@
 #include "Player.h"
 #include "EngineMathFunctions.h"
 #include "WorldTransform.h"
-#include "MapChipField.h"
 #include <cassert>
 #include <numbers>
 #include <algorithm>
@@ -175,7 +174,7 @@ void Player::BehaviorAttackInitialize() {
 		attackDirection_ = Normalize(inputDirection);
 	} else {
 		// 入力が無い場合は、向いている角度から攻撃方向を計算する
-		
+
 		// atan2(x,y)逆で、角度からベクトルを計算
 		attackDirection_ = Vector3{
 			std::sin(worldTransform_.rotation_.y),
@@ -219,8 +218,8 @@ void Player::BehaviorDodgeInitialize() {
 		// 入力方向を正規化して保存
 		dodgeDirection_ = Normalize(inputDirection);
 	} else {
-	    // 入力が無い場合は、向いている角度から回避方向を計算する
-		
+		// 入力が無い場合は、向いている角度から回避方向を計算する
+
 		// atan2(x,y)逆で、角度からベクトルを計算
 		dodgeDirection_ = Vector3{
 			std::sin(worldTransform_.rotation_.y),
@@ -230,7 +229,7 @@ void Player::BehaviorDodgeInitialize() {
 
 		// 正規化
 		dodgeDirection_ = Normalize(dodgeDirection_);
-		
+
 	}
 }
 
@@ -287,14 +286,14 @@ void Player::BehaviorRootUpdate() {
 	}
 
 	// 移動量を加味して衝突判定する
-	
+
 	// 衝突情報を初期化
 	CollisionMapinfo collisionMapInfo;
 	// 移動量に速度の値をコピー
 	collisionMapInfo.moveAmount_ = velocity_;
 
 	// マップ衝突チェック
-	MapCollisionCheck(collisionMapInfo);
+	//MapCollisionCheck(collisionMapInfo);
 
 	// 判定結果を反映して移動させる
 	ApplyCollisionResult(collisionMapInfo);
@@ -320,7 +319,7 @@ void Player::BehaviorAttackUpdate() {
 	if (Length(attackDirection_) > 0.001f) { // わずかでも攻撃方向があれば
 		// 目標角度を計算（atan2はラジアンを返す）
 		float targetAngle = std::atan2(attackDirection_.x, attackDirection_.z);
-		
+
 		// 現在の角度を取得
 		float currentAngle = worldTransform_.rotation_.y;
 
@@ -348,7 +347,7 @@ void Player::BehaviorAttackUpdate() {
 
 	CollisionMapinfo collisionMapInfo;
 	Vector3 velocity{};
-	
+
 	switch (attackPhase_) {
 	case AttackPhase::Charge:
 	default:
@@ -374,11 +373,11 @@ void Player::BehaviorAttackUpdate() {
 		worldTransform_.scale_.z = EaseOutLerpFloat(0.3f, 1.3f, t); // 画像の指示に合わせてEaseOutに変更
 		worldTransform_.scale_.y = EaseInLerpFloat(1.6f, 0.7f, t); // 画像の指示に合わせてEaseInに変更
 
-		 float length = Length(attackDirection_); 
-		 if (std::abs(length - 1.0f) > 0.001f) { 
-		     // 長さが1.0fからずれている場合は問題あり
-			 std::cout << "Warning: attackDirection_ is not normalized. Length = " << length << std::endl;
-		 }
+		float length = Length(attackDirection_);
+		if (std::abs(length - 1.0f) > 0.001f) {
+			// 長さが1.0fからずれている場合は問題あり
+			std::cout << "Warning: attackDirection_ is not normalized. Length = " << length << std::endl;
+		}
 
 		velocity = attackDirection_ * kAttackSpeed;
 
@@ -425,12 +424,12 @@ void Player::BehaviorAttackUpdate() {
 
 	// Rushフェーズでのみ衝突判定を通す
 	if (attackPhase_ == AttackPhase::Rush) {
-		// 衝突情報を初期化して、velocityを代入
-		collisionMapInfo.moveAmount_ = velocity;
-		// マップ衝突チェック
-		MapCollisionCheck(collisionMapInfo);
-		// 判定結果を反映して移動させる
-		ApplyCollisionResult(collisionMapInfo);
+		//// 衝突情報を初期化して、velocityを代入
+		//collisionMapInfo.moveAmount_ = velocity;
+		//// マップ衝突チェック
+		//MapCollisionCheck(collisionMapInfo);
+		//// 判定結果を反映して移動させる
+		//ApplyCollisionResult(collisionMapInfo);
 
 		// 衝突後の速度を次フレームの Rush フェーズのために同期
 		velocity = collisionMapInfo.moveAmount_;
@@ -567,7 +566,7 @@ void Player::BehaviorDodgeUpdate() {
 	collisionMapInfo.moveAmount_ = velocity;
 
 	// マップ衝突チェック
-	MapCollisionCheck(collisionMapInfo);
+	//MapCollisionCheck(collisionMapInfo);
 
 	// 判定結果を反映して移動させる
 	ApplyCollisionResult(collisionMapInfo);
@@ -665,6 +664,8 @@ void Player::Move() {
 #endif // DEBUG
 
 }
+
+#if 0 // マップチップ衝突判定を無効化
 
 void Player::MapCollisionCheck(CollisionMapinfo& info) {
 	//MapCollisionCheckUp(info);
@@ -872,14 +873,16 @@ void Player::MapCollisionCheckLeft(CollisionMapinfo& info) {
 		}
 
 		float limitAmount = rect.right - (worldTransform_.translation_.x - kWidth / 2.0f);
-		
+
 		limitAmount += kBlank;
-		
+
 		info.moveAmount_.x = (std::max)(info.moveAmount_.x, limitAmount);
 		// 壁に当たったことを記録する
 		info.onCollisionWall_ = true;
 	}
 }
+
+#endif // #if 0: マップチップ衝突判定の無効化を終了
 
 Vector3 Player::CornerPosition(Vector3 center, Corner corner) {
 	Vector3 offsetTable[static_cast<uint32_t>(Corner::kNumCorner)] = {

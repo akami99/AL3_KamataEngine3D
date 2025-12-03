@@ -25,11 +25,6 @@ void GameScene::Initialize() {
 	camera_.Initialize();
 	camera_.farZ = 1000.0f; // 遠くのオブジェクトまで描画するためにfarZを大きく設定
 
-	// マップチップフィールドの生成
-	mapChipField_ = new MapChipField;
-	// マップチップフィールドの初期化
-	mapChipField_->LoadMapChipCsv("Resources/blocks.csv");
-
 	// 天球の生成
 	skydome_ = new Skydome();
 	// 天球の初期化
@@ -50,35 +45,16 @@ void GameScene::Initialize() {
 
 	// 自キャラの生成
 	player_ = new Player();
-	// 座標をマップチップ番号で指定
-	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(4, 18);
+	// 座標を指定
+	Vector3 playerPosition = { 5.0f * kBlockSize_, 0.0f, 5.0f * kBlockSize_ };
 	// 自キャラの初期化
 	player_->Initialize(model_, modelAttack_, &camera_, playerPosition);
 
 	// 敵キャラの生成
-	////1段目
-	//GenarateEnemies(23, 18);
-	//GenarateEnemies(44, 18);
-	//GenarateEnemies(74, 18);
-	//GenarateEnemies(83, 18);
-	////2段目
-	//GenarateEnemies(17, 13);
-	//GenarateEnemies(28, 13);
-	//GenarateEnemies(70, 13);
-	//GenarateEnemies(80, 13);
 	//3段目
-	GenarateEnemies(24, 8);
-	GenarateEnemies(40, 8);
-	GenarateEnemies(66, 8);
-	GenarateEnemies(86, 8);
-	////4段目
-	//GenarateEnemies(20, 3);
-	//GenarateEnemies(35, 3);
-	//GenarateEnemies(61, 3);
-	//GenarateEnemies(78, 3);
-
-	// マップチップフィールドの参照をセット
-	player_->SetMapChipField(mapChipField_);
+	GenarateEnemies({ 24.0f * kBlockSize_, 0.0f, 8.0f * kBlockSize_ });
+	GenarateEnemies({ 40.0f * kBlockSize_, 0.0f, 8.0f * kBlockSize_ });
+	GenarateEnemies({ 36.0f * kBlockSize_, 0.0f, 4.0f * kBlockSize_ });
 
 	// カメラコントローラーの初期化
 	// 生成
@@ -92,7 +68,7 @@ void GameScene::Initialize() {
 
 	// ゴールのドアを生成
 	door_ = new Door();
-	Vector3 doorPosition = mapChipField_->GetMapChipPositionByIndex(8, 3); // 例として、上から2段目の左端の敵の場所に配置
+	Vector3 doorPosition = { 8.0f * kBlockSize_, 0.0f, 8.0f * kBlockSize_ };
 	door_->Initialize(modelDoor_, &camera_, doorPosition);
 
 	// ブロックの生成
@@ -113,6 +89,20 @@ void GameScene::Initialize() {
 	UpdateWorldTransform(worldTransformBackGround2_);
 	UpdateWorldTransform(worldTransformBackGround3_);
 	UpdateWorldTransform(worldTransformBackGround4_);
+
+	// 自キャラの更新
+	player_->Update();
+
+	// 敵キャラの更新
+	for (Enemy* enemy : enemies_) {
+		enemy->Update();
+	}
+
+	// ゴールのドアの更新
+	door_->Update();
+
+	// 追従カメラの更新
+	cameraController_->Update();
 }
 
 GameScene::~GameScene() {
@@ -134,9 +124,6 @@ GameScene::~GameScene() {
 		row.clear();
 	}
 	worldTransformBlocks_.clear();
-	// マップチップフィールドの解放
-	delete mapChipField_;
-	mapChipField_ = nullptr;
 	// 天球の解放
 	delete skydome_;
 	skydome_ = nullptr;
@@ -179,19 +166,19 @@ void GameScene::Update() {
 		if (fade_->IsFinished()) { // フェードインが終了したら
 			phase_ = Phase::kPlay;
 		}
-		// 自キャラの更新
-		player_->Update();
+		//// 自キャラの更新
+		//player_->Update();
 
-		// 敵キャラの更新
-		for (Enemy* enemy : enemies_) {
-			enemy->Update();
-		}
+		//// 敵キャラの更新
+		//for (Enemy* enemy : enemies_) {
+		//	enemy->Update();
+		//}
 
-		// ゴールのドアの更新
-		door_->Update();
+		//// ゴールのドアの更新
+		//door_->Update();
 
-		// 追従カメラの更新
-		cameraController_->Update();
+		//// 追従カメラの更新
+		//cameraController_->Update();
 
 		// カメラの処理
 		if (isDebugCameraActive_) {
@@ -403,38 +390,52 @@ void GameScene::Draw() {
 }
 
 void GameScene::GenarateBlocks() {
+	// 床を作る
+	const uint32_t kNumBlockHorizontal = 50; // 横方向（X軸）のブロック数
+	const uint32_t kNumBlockVertical = 20; // 縦方向（Z軸）のブロック数
 
-	// 要素数
-	uint32_t numBlockVertical = mapChipField_->GetNumBlockVertical();
-	uint32_t numBlockHorizontal = mapChipField_->GetNumBlockHorizontal();
-
-	// 要素数を変更する
-	// 列数を設定（縦方向のブロック数）
-	worldTransformBlocks_.resize(numBlockVertical);
-	for (uint32_t i = 0; i < numBlockVertical; ++i) {
-		// 1列の要素数を設定（横方向のブロック数）
-		worldTransformBlocks_[i].resize(numBlockHorizontal);
+	// 配列のサイズを確保
+	worldTransformBlocks_.resize(kNumBlockVertical);
+	for (uint32_t i = 0; i < kNumBlockVertical; ++i) {
+		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
 	}
 
-	// ブロックの生成
-	for (uint32_t i = 0; i < numBlockVertical; ++i) {
-		for (uint32_t j = 0; j < numBlockHorizontal; ++j) {
-			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
-				WorldTransform* worldTransform = new WorldTransform();
-				worldTransform->Initialize();
-				worldTransformBlocks_[i][j] = worldTransform;
-				worldTransformBlocks_[i][j]->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
-			}
+	// 全ての WorldTransform* を nullptr で初期化（メモリリーク対策）
+	for (uint32_t i = 0; i < kNumBlockVertical; ++i) {
+		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
+			worldTransformBlocks_[i][j] = nullptr;
 		}
 	}
 
+	// 必要な箇所にWorldTransformをnewして配置
+	// 簡素な床を作成
+	for (uint32_t i = 0; i < kNumBlockVertical; ++i) {
+		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
+			// ここで、レベルデザインに合わせて特定の場所にブロックを配置するロジックを実装
+
+			// X: j * kBlockSize, Y: -1.0f (床の高さ), Z: i * kBlockSize
+			WorldTransform* worldTransform = new WorldTransform();
+			worldTransform->Initialize();
+
+			// 床を構成するブロックの位置
+			worldTransform->translation_ = KamataEngine::Vector3{
+				j * kBlockSize_ /*- (kNumBlockHorizontal * kBlockSize_ / 2.0f)*/, // X軸
+				-1.0f, // Y軸（プレイヤーより下に配置）
+				i * kBlockSize_ - (kNumBlockVertical * kBlockSize_ / 2.0f) // Z軸
+			};
+			worldTransform->scale_ = KamataEngine::Vector3{ kBlockSize_, 1.0f, kBlockSize_ }; // Y軸を薄くする
+
+			worldTransformBlocks_[i][j] = worldTransform;
+		}
+	}
+
+	// ジャンプ台、壁などは、上記のループ内で条件分岐を使って実装する
 }
 
-void GameScene::GenarateEnemies(uint32_t xIndex, uint32_t yIndex) {
+void GameScene::GenarateEnemies(const Vector3& position) {
 	Enemy* newEnemy = new Enemy();
-	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(xIndex, yIndex);
-	// 敵キャラの初期化（座標をマップチップ番号で指定）
-	newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+	// 敵キャラの初期化
+	newEnemy->Initialize(modelEnemy_, &camera_, position);
 
 	enemies_.push_back(newEnemy);
 }
@@ -458,7 +459,7 @@ void GameScene::CheckAllCollisions() {
 			player_->OnCollision(enemy);
 			// 敵の衝突時関数を呼び出す
 			enemy->OnCollision(player_);
-			
+
 			// プレイヤー死亡時判定
 			isPlayerDead_ = player_->IsDead();
 		}

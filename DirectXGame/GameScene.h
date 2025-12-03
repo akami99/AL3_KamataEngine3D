@@ -5,7 +5,7 @@
 #include "Enemy.h"
 #include "Skydome.h"
 #include "Fade.h"
-#include "MapChipField.h"
+//#include "MapChipField.h"
 #include "CameraController.h"
 #include "Door.h"
 #include <vector>
@@ -57,7 +57,7 @@ private:
 	KamataEngine::WorldTransform worldTransformBackGround4_;
 
 	// マップチップフィールド
-	MapChipField* mapChipField_;
+	//MapChipField* mapChipField_;
 
 	// 自キャラ
 	Player* player_ = nullptr;
@@ -69,6 +69,7 @@ private:
 	// 敵の数
 	static inline const int32_t kEnemyNum = 16;
 
+	const float kBlockSize_ = 2.0f; // ブロックのサイズ
 	std::vector<std::vector<KamataEngine::WorldTransform*>> worldTransformBlocks_;
 
 	CameraController* cameraController_ = nullptr;
@@ -113,7 +114,7 @@ public:
 private:
 	void GenarateBlocks();
 
-	void GenarateEnemies(uint32_t xIndex, uint32_t yIndex);
+	void GenarateEnemies(const KamataEngine::Vector3& position);
 
 	// 全ての当たり判定を行う
 	void CheckAllCollisions();

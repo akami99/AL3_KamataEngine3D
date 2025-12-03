@@ -25,11 +25,16 @@ private:
 	static inline const float kHeight = 0.9f;
 
 	// 歩行の速さ
-	static inline const float kWalkSpeed = 0.00f;
+	static inline const float kWalkSpeed = 0.05f;
 	// 速度
 	KamataEngine::Vector3 velocity_ = {};
 	// 移動方向
 	LRDirection lrDirection_ = LRDirection::kLeft;
+
+	// 巡回タイマー
+	float patrolTimer_ = 0.0f;
+	// 巡回時間[秒]
+	static inline const float kTimePatrol = 3.0f; // 3秒ごとに方向転換する
 
 	//// 旋回開始時の角度
 	//float turnFirstRotationY_ = 0.0f;
