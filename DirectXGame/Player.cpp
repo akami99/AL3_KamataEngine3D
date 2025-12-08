@@ -579,70 +579,86 @@ void Player::Move() {
 	// 移動入力
 	// 接地状態
 	/*if (onGround_) {*/
-		// 移動操作
-	if (Input::GetInstance()->PushKey(DIK_D) ||
-		Input::GetInstance()->PushKey(DIK_A)) {
 
-		// 左右加速
-		Vector3 acceleration = {};
-		if (Input::GetInstance()->PushKey(DIK_D)) {
-			// 左入力中の右入力
-			if (velocity_.x < 0.0f) {
-				// 速度と逆方向中は急ブレーキ
-				velocity_.x *= (1.0f - kAttenuation);
-			}
+	// ----------------------------------------------------
+	// 入力による加速度ベクトルの計算 (優先度ロジック適用)
+	// ----------------------------------------------------
+	Vector3 acceleration = {};
+	bool inputX = false;
+	bool inputZ = false;
 
-			acceleration.x += kAcceleration;
-		} else if (Input::GetInstance()->PushKey(DIK_A)) {
-			// 右入力中の左入力
-			if (velocity_.x > 0.0f) {
-				// 速度と逆方向中は急ブレーキ
-				velocity_.x *= (1.0f - kAttenuation);
-			}
+	// 入力状態の取得
+	bool pushW = Input::GetInstance()->PushKey(DIK_W);
+	bool pushS = Input::GetInstance()->PushKey(DIK_S);
+	bool pushA = Input::GetInstance()->PushKey(DIK_A);
+	bool pushD = Input::GetInstance()->PushKey(DIK_D);
 
-			acceleration.x -= kAcceleration;
-		}
-		// 加速/減速
-		velocity_.x += acceleration.x;
-
-		// 最大速度制限
-		velocity_.x = std::clamp(velocity_.x, -kLimitRunSpeed, kLimitRunSpeed);
-	} else {
-		// 非入力時は移動減衰を書ける
-		velocity_.x *= (1.0f - kAttenuation);
+	// --- Z軸（前後）の入力処理 ---
+	if (pushW && !pushS) {
+		// Wのみ（上方向）
+		inputZ = true;
+		if (velocity_.z < 0.0f) { velocity_.z *= (1.0f - kAttenuation); } // 急ブレーキ
+		acceleration.z += kAcceleration;
+	} else if (!pushW && pushS) {
+		// Sのみ（下方向）
+		inputZ = true;
+		if (velocity_.z > 0.0f) { velocity_.z *= (1.0f - kAttenuation); } // 急ブレーキ
+		acceleration.z -= kAcceleration;
 	}
-	if (Input::GetInstance()->PushKey(DIK_W) ||
-		Input::GetInstance()->PushKey(DIK_S)) {
+	// ※ WとSの同時押し (pushW && pushS) の場合は、else ifで拾われないため acceleration.z は 0 のまま
 
-		// 奥行き加速
-		Vector3 acceleration = {};
-		if (Input::GetInstance()->PushKey(DIK_W)) {
-			// 下入力中の上入力
-			if (velocity_.z < 0.0f) {
-				// 速度と逆方向中は急ブレーキ
-				velocity_.z *= (1.0f - kAttenuation);
-			}
-
-			acceleration.z += kAcceleration;
-		} else if (Input::GetInstance()->PushKey(DIK_S)) {
-			// 上入力下の左入力
-			if (velocity_.z > 0.0f) {
-				// 速度と逆方向中は急ブレーキ
-				velocity_.z *= (1.0f - kAttenuation);
-			}
-
-			acceleration.z -= kAcceleration;
-		}
-		// 加速/減速
-		velocity_.z += acceleration.z;
-
-		// 最大速度制限
-		velocity_.z = std::clamp(velocity_.z, -kLimitRunSpeed, kLimitRunSpeed);
-	} else {
-		// 非入力時は移動減衰を書ける
+	// 非入力時（W, Sともに押されていない、または W+S の同時押し）はZ軸の移動減衰
+	if (!inputZ) {
 		velocity_.z *= (1.0f - kAttenuation);
 	}
-	if (!onGround_) {
+
+	// --- X軸（左右）の入力処理 ---
+	if (pushD && !pushA) {
+		// Dのみ（右方向）
+		inputX = true;
+		if (velocity_.x < 0.0f) { velocity_.x *= (1.0f - kAttenuation); } // 急ブレーキ
+		acceleration.x += kAcceleration;
+	} else if (!pushD && pushA) {
+		// Aのみ（左方向）
+		inputX = true;
+		if (velocity_.x > 0.0f) { velocity_.x *= (1.0f - kAttenuation); } // 急ブレーキ
+		acceleration.x -= kAcceleration;
+	}
+	// ※ AとDの同時押し (pushA && pushD) の場合は、else ifで拾われないため acceleration.x は 0 のまま
+
+	// 非入力時（A, Dともに押されていない、または A+D の同時押し）はX軸の移動減衰
+	if (!inputX) {
+		velocity_.x *= (1.0f - kAttenuation);
+	}
+
+
+	// ----------------------------------------------------
+	// 加速度ベクトルの長さの制限（斜め入力時の調整）
+	// ----------------------------------------------------
+	// 加速度ベクトルの長さを取得
+	float accelerationLength = Length(acceleration);
+
+	// 加速度ベクトルの長さがkAccelerationを超えていたら正規化
+	if (accelerationLength > kAcceleration) {
+		acceleration = acceleration * (kAcceleration / accelerationLength);
+	}
+
+	// ----------------------------------------------------
+	// 速度の更新とベクトルの長さの制限
+	// ----------------------------------------------------
+
+	// 加速/減速を速度に適用
+	velocity_.x += acceleration.x;
+	velocity_.z += acceleration.z;
+
+	// 速度ベクトルの長さを取得
+	float velocityLength = Length(velocity_);
+
+	// 速度ベクトルの長さが最大速度kLimitRunSpeedを超えていたら制限
+	if (velocityLength > kLimitRunSpeed) {
+		velocity_ = velocity_ * (kLimitRunSpeed / velocityLength);
+	}
+	//if (!onGround_) {
 		//	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
 		//		// ジャンプ初速
 		//		velocity_ += Vector3{0.0f, kJumpAcceleration, 0.0f};
@@ -652,13 +668,17 @@ void Player::Move() {
 		//velocity_ += Vector3{ 0.0f, -kGravityAcceleration, 0.0f };
 		//// 落下速度制限
 		//velocity_.y = (std::max)(velocity_.y, -kLimitFallSpeed);
-	}
+	//}
 
 #ifdef _DEBUG
 
-	if (Input::GetInstance()->PushKey(DIK_UP)) {
+	if (Input::GetInstance()->TriggerKey(DIK_UP)) {
 		// ジャンプ初速
 		velocity_ += Vector3{ 0.0f, kJumpAcceleration, 0.0f };
+	}
+	if (Input::GetInstance()->TriggerKey(DIK_DOWN)) {
+		// ジャンプ初速
+		velocity_ += Vector3{ 0.0f, -kJumpAcceleration, 0.0f };
 	}
 
 #endif // DEBUG

@@ -27,7 +27,8 @@ private:
 	KamataEngine::Vector3 TargetOffset_ = { 0.0f, 10.0f, -10.0f };
 
 	// カメラの移動範囲
-	Rect movableArea_ = { -10, 100, -10, 100 }; //変更する
+	Rect movableArea_{}; 
+	const Rect kSetMovableArea = { 6, 34, -4, 20 }; //調整部分
 	// カメラの目標座標
 	KamataEngine::Vector3 targetPosition_ = { 0.0f, 0.0f, 0.0f };
 	// 座標補間割合

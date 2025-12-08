@@ -158,6 +158,26 @@ bool IsCollision(const Sphere& sphere, const Plane& plane) {
 	return distance <= sphere.radius;
 }
 
+AABB GetAABB(const WorldTransform& worldTransform) {
+	AABB aabb;
+	
+	// スケールを半分にしたものが中心からの距離になる
+	// モデルが中心(0,0,0)にある 1x1x1 のキューブだと仮定
+	Vector3 halfScale = worldTransform.scale_ * 0.5f;
+
+	// AABBの最小座標を計算
+	aabb.min.x = worldTransform.translation_.x - halfScale.x;
+	aabb.min.y = worldTransform.translation_.y - halfScale.y;
+	aabb.min.z = worldTransform.translation_.z - halfScale.z;
+
+	// AABBの最大座標を計算
+	aabb.max.x = worldTransform.translation_.x + halfScale.x;
+	aabb.max.y = worldTransform.translation_.y + halfScale.y;
+	aabb.max.z = worldTransform.translation_.z + halfScale.z;
+
+	return aabb;
+}
+
 bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
 	// AABBの衝突判定は、各軸での重なりを確認する
 	if (aabb1.max.x >= aabb2.min.x && aabb1.min.x <= aabb2.max.x &&
@@ -166,6 +186,52 @@ bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
 		return true; // 衝突している
 	}
 	return false; // 衝突していない
+}
+
+Vector3 CalculateAABBOverlap(const AABB& aabb1, const AABB& aabb2) {
+
+	// 衝突していない場合はゼロベクトルを返す
+	if (!IsCollision(aabb1, aabb2)) {
+		return {};
+	}
+
+	// 1. 各軸におけるオーバーラップ量（めり込み量）を符号なしで計算
+
+	// X軸の中心間距離
+	float center1X = (aabb1.min.x + aabb1.max.x) * 0.5f;
+	float center2X = (aabb2.min.x + aabb2.max.x) * 0.5f;
+	// X軸の幅の合計の半分
+	float halfWidthSum = (aabb1.max.x - aabb1.min.x) * 0.5f + (aabb2.max.x - aabb2.min.x) * 0.5f;
+	// X軸の純粋なめり込み量
+	float overlapX = halfWidthSum - std::abs(center1X - center2X);
+
+	// Z軸の中心間距離
+	float center1Z = (aabb1.min.z + aabb1.max.z) * 0.5f;
+	float center2Z = (aabb2.min.z + aabb2.max.z) * 0.5f;
+	// Z軸の幅の合計の半分
+	float halfDepthSum = (aabb1.max.z - aabb1.min.z) * 0.5f + (aabb2.max.z - aabb2.min.z) * 0.5f;
+	// Z軸の純粋なめり込み量
+	float overlapZ = halfDepthSum - std::abs(center1Z - center2Z);
+
+	// 2. めり込み量が少ない軸（MTV）を決定し、解消ベクトルを作成
+	Vector3 resolveVector = {};
+
+	// X軸とZ軸で比較
+	if (overlapX < overlapZ) {
+		// X軸解決が優先
+		resolveVector.x = overlapX;
+		// 押し戻し方向の決定: プレイヤーがブロックより右側(x>0)なら正の方向へ、左側(x<0)なら負の方向へ
+		resolveVector.x *= (center1X > center2X) ? 1.0f : -1.0f;
+	} else {
+		// Z軸解決が優先
+		resolveVector.z = overlapZ;
+		// 押し戻し方向の決定: プレイヤーがブロックより奥側(z>0)なら正の方向へ、手前側(z<0)なら負の方向へ
+		resolveVector.z *= (center1Z > center2Z) ? 1.0f : -1.0f;
+	}
+
+	// Y軸はジャンプがないため、衝突応答は行いません (resolveVector.y は 0 のまま)
+
+	return resolveVector;
 }
 
 // ベクトルを法線方向に投影する関数

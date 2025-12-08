@@ -143,12 +143,27 @@ KamataEngine::Vector3 Reflect(const KamataEngine::Vector3& input, const KamataEn
 bool IsCollision(const Sphere& sphere, const Plane& plane);
 
 /// <summary>
+/// WorldTransform から AABB を計算する
+/// </summary>
+/// <param name="worldTransform">変換情報</param>
+/// <returns>計算された AABB</returns>
+AABB GetAABB(const KamataEngine::WorldTransform& worldTransform);
+
+/// <summary>
 /// AABBとAABBの衝突判定関数
 /// </summary>
 /// <param name="aabb1">AABB</param>
 /// <param name="aabb2">AABB</param>
 /// <returns>衝突判定</returns>
 bool IsCollision(const AABB& aabb1, const AABB& aabb2);
+
+/// <summary>
+/// 2つのAABB間のめり込み量（オーバーラップ）を計算し、MTVを返す
+/// </summary>
+/// <param name="aabb1">プレイヤーの AABB (移動する物体)</param>
+/// <param name="aabb2">ブロックの AABB (静止している物体)</param>
+/// <returns>衝突を解消するための最小移動ベクトル (MTV)。衝突していない場合はゼロベクトル</returns>
+KamataEngine::Vector3 CalculateAABBOverlap(const AABB& aabb1, const AABB& aabb2);
 
 /// <summary>
 /// ベクトルを法線方向に投影する関数

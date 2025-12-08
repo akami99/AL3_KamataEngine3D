@@ -19,7 +19,7 @@ void GameScene::Initialize() {
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 	modelEnemy_ = Model::CreateFromOBJ("enemy", true);
 	modelDoor_ = Model::CreateFromOBJ("door", true);
-	modelBackGround_ = Model::CreateFromOBJ("background", true);
+	//modelBackGround_ = Model::CreateFromOBJ("background", true);
 
 	// カメラの初期化
 	camera_.Initialize();
@@ -30,7 +30,7 @@ void GameScene::Initialize() {
 	// 天球の初期化
 	skydome_->Initialize(modelSkydome_, &camera_);
 
-	worldTransformBackGround1_.Initialize();
+	/*worldTransformBackGround1_.Initialize();
 	worldTransformBackGround1_.translation_ = Vector3{ 10.0f, -6.0f, 20.0f };
 
 	worldTransformBackGround2_.Initialize();
@@ -40,21 +40,25 @@ void GameScene::Initialize() {
 	worldTransformBackGround3_.translation_ = Vector3{ 70.0f, -6.0f, 20.0f };
 
 	worldTransformBackGround4_.Initialize();
-	worldTransformBackGround4_.translation_ = Vector3{ 100.0f, -6.0f, 20.0f };
+	worldTransformBackGround4_.translation_ = Vector3{ 100.0f, -6.0f, 20.0f };*/
 
 
 	// 自キャラの生成
 	player_ = new Player();
 	// 座標を指定
-	Vector3 playerPosition = { 5.0f * kBlockSize_, 0.0f, 5.0f * kBlockSize_ };
+	Vector3 playerPosition = { 10.0f * kBlockSize_, 1.0f, 3.0f * kBlockSize_ };
 	// 自キャラの初期化
 	player_->Initialize(model_, modelAttack_, &camera_, playerPosition);
 
-	// 敵キャラの生成
-	//3段目
-	GenarateEnemies({ 24.0f * kBlockSize_, 0.0f, 8.0f * kBlockSize_ });
-	GenarateEnemies({ 40.0f * kBlockSize_, 0.0f, 8.0f * kBlockSize_ });
-	GenarateEnemies({ 36.0f * kBlockSize_, 0.0f, 4.0f * kBlockSize_ });
+	// 敵キャラの生成(奥側から)
+	GenarateEnemies({ 14.0f * kBlockSize_, 1.0f, 18.0f * kBlockSize_ });
+	GenarateEnemies({ 16.0f * kBlockSize_, 1.0f, 18.0f * kBlockSize_ });
+	GenarateEnemies({ 6.0f * kBlockSize_, 1.0f, 17.0f * kBlockSize_ });
+	GenarateEnemies({ 10.0f * kBlockSize_, 1.0f, 14.0f * kBlockSize_ });
+	GenarateEnemies({ 13.0f * kBlockSize_, 1.0f, 12.0f * kBlockSize_ });
+	GenarateEnemies({ 4.0f * kBlockSize_, 1.0f, 10.0f * kBlockSize_ });
+	GenarateEnemies({ 7.0f * kBlockSize_, 1.0f, 10.0f * kBlockSize_ });
+	GenarateEnemies({ 17.0f * kBlockSize_, 1.0f, 6.0f * kBlockSize_ });
 
 	// カメラコントローラーの初期化
 	// 生成
@@ -68,7 +72,7 @@ void GameScene::Initialize() {
 
 	// ゴールのドアを生成
 	door_ = new Door();
-	Vector3 doorPosition = { 8.0f * kBlockSize_, 0.0f, 8.0f * kBlockSize_ };
+	Vector3 doorPosition = { 19.0f * kBlockSize_, 1.0f, 19.0f * kBlockSize_ };
 	door_->Initialize(modelDoor_, &camera_, doorPosition);
 
 	// ブロックの生成
@@ -85,10 +89,10 @@ void GameScene::Initialize() {
 	// 初期フェーズはフェードイン
 	phase_ = Phase::kFadeIn;
 
-	UpdateWorldTransform(worldTransformBackGround1_);
+	/*UpdateWorldTransform(worldTransformBackGround1_);
 	UpdateWorldTransform(worldTransformBackGround2_);
 	UpdateWorldTransform(worldTransformBackGround3_);
-	UpdateWorldTransform(worldTransformBackGround4_);
+	UpdateWorldTransform(worldTransformBackGround4_);*/
 
 	// 自キャラの更新
 	player_->Update();
@@ -117,13 +121,15 @@ GameScene::~GameScene() {
 	// コンテナ自体を空にする
 	enemies_.clear();
 	// ブロックの解放
-	for (auto& row : worldTransformBlocks_) {
-		for (KamataEngine::WorldTransform* transform : row) {
-			delete transform;
-		}
-		row.clear();
+	// 壁・障害物の解放
+	for (WorldTransform* block : collidableBlocks_) {
+		delete block;
 	}
-	worldTransformBlocks_.clear();
+	collidableBlocks_.clear();
+
+	// 床の解放
+	delete floorTransform_;
+	floorTransform_ = nullptr;
 	// 天球の解放
 	delete skydome_;
 	skydome_ = nullptr;
@@ -154,8 +160,8 @@ GameScene::~GameScene() {
 	modelEnemy_ = nullptr;
 	delete modelDoor_;
 	modelDoor_ = nullptr;
-	delete modelBackGround_;
-	modelBackGround_ = nullptr;
+	/*delete modelBackGround_;
+	modelBackGround_ = nullptr;*/
 }
 
 void GameScene::Update() {
@@ -166,19 +172,6 @@ void GameScene::Update() {
 		if (fade_->IsFinished()) { // フェードインが終了したら
 			phase_ = Phase::kPlay;
 		}
-		//// 自キャラの更新
-		//player_->Update();
-
-		//// 敵キャラの更新
-		//for (Enemy* enemy : enemies_) {
-		//	enemy->Update();
-		//}
-
-		//// ゴールのドアの更新
-		//door_->Update();
-
-		//// 追従カメラの更新
-		//cameraController_->Update();
 
 		// カメラの処理
 		if (isDebugCameraActive_) {
@@ -194,14 +187,10 @@ void GameScene::Update() {
 		}
 
 		// ブロックの更新
-		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
-			for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
-				if (!worldTransformBlock)
-					continue;
-
-				// 定数バッファに転送する
-				UpdateWorldTransform(*worldTransformBlock);
-			}
+		UpdateWorldTransform(*floorTransform_);
+		for (WorldTransform* block : collidableBlocks_) {
+			// 定数バッファに転送する
+			UpdateWorldTransform(*block);
 		}
 		break;
 	case Phase::kPlay:
@@ -248,14 +237,11 @@ void GameScene::Update() {
 		}
 
 		// ブロックの更新
-		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
-			for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
-				if (!worldTransformBlock)
-					continue;
-
-				// 定数バッファに転送する
-				UpdateWorldTransform(*worldTransformBlock);
-			}
+		// ブロックの更新
+		UpdateWorldTransform(*floorTransform_);
+		for (WorldTransform* block : collidableBlocks_) {
+			// 定数バッファに転送する
+			UpdateWorldTransform(*block);
 		}
 
 		// 全ての当たり判定を行う
@@ -304,14 +290,10 @@ void GameScene::Update() {
 		}
 
 		// ブロックの更新
-		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
-			for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
-				if (!worldTransformBlock)
-					continue;
-
-				// 定数バッファに転送する
-				UpdateWorldTransform(*worldTransformBlock);
-			}
+		UpdateWorldTransform(*floorTransform_);
+		for (WorldTransform* block : collidableBlocks_) {
+			// 定数バッファに転送する
+			UpdateWorldTransform(*block);
 		}
 
 		if (deathParticles_ && deathParticles_->IsFinished()) {
@@ -345,10 +327,10 @@ void GameScene::Draw() {
 	skydome_->Draw();
 
 	// 背景の描画
-	modelBackGround_->Draw(worldTransformBackGround1_, camera_);
+	/*modelBackGround_->Draw(worldTransformBackGround1_, camera_);
 	modelBackGround_->Draw(worldTransformBackGround2_, camera_);
 	modelBackGround_->Draw(worldTransformBackGround3_, camera_);
-	modelBackGround_->Draw(worldTransformBackGround4_, camera_);
+	modelBackGround_->Draw(worldTransformBackGround4_, camera_);*/
 
 	// 自キャラの描画
 	if (!player_->IsDead()) {
@@ -368,14 +350,9 @@ void GameScene::Draw() {
 	door_->Draw();
 
 	// ブロックの描画
-	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
-		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
-			if (!worldTransformBlock)
-				continue;
-
-			// 3Dモデルの描画
-			modelBlock_->Draw(*worldTransformBlock, camera_);
-		}
+	modelBlock_->Draw(*floorTransform_, camera_);
+	for (WorldTransform* block : collidableBlocks_) {
+		modelBlock_->Draw(*block, camera_);
 	}
 
 	// 3Dモデル描画後処理
@@ -390,46 +367,85 @@ void GameScene::Draw() {
 }
 
 void GameScene::GenarateBlocks() {
-	// 床を作る
-	const uint32_t kNumBlockHorizontal = 50; // 横方向（X軸）のブロック数
-	const uint32_t kNumBlockVertical = 20; // 縦方向（Z軸）のブロック数
+	// 床を生成
 
-	// 配列のサイズを確保
-	worldTransformBlocks_.resize(kNumBlockVertical);
-	for (uint32_t i = 0; i < kNumBlockVertical; ++i) {
-		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
-	}
+	// 床のサイズ
+	const float kAreaSize = 40.0f;
+	const float kpositionOfset = kAreaSize * 0.5f;
+	// 床のWorldTransformを生成
+	floorTransform_ = new WorldTransform();
+	floorTransform_->Initialize();
+	// kAreaSize x kAreaSize の広さ
+	floorTransform_->scale_ = Vector3{ kAreaSize, 1.0f, kAreaSize };
+	// 位置を設定
+	floorTransform_->translation_ = Vector3{ kpositionOfset, 0.0f, kpositionOfset };
 
-	// 全ての WorldTransform* を nullptr で初期化（メモリリーク対策）
-	for (uint32_t i = 0; i < kNumBlockVertical; ++i) {
-		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
-			worldTransformBlocks_[i][j] = nullptr;
-		}
-	}
+	// 衝突判定を行う壁や障害物の生成 (collidableBlocks_ に格納)
 
-	// 必要な箇所にWorldTransformをnewして配置
-	// 簡素な床を作成
-	for (uint32_t i = 0; i < kNumBlockVertical; ++i) {
-		for (uint32_t j = 0; j < kNumBlockHorizontal; ++j) {
-			// ここで、レベルデザインに合わせて特定の場所にブロックを配置するロジックを実装
+	// 壁や障害物を作成するヘルパー関数
+	auto createWall = [&](const Vector3& pos, const Vector3& scale) {
+		WorldTransform* worldTransform = new WorldTransform();
+		worldTransform->Initialize();
+		worldTransform->translation_ = pos;
+		worldTransform->scale_ = scale;
+		collidableBlocks_.push_back(worldTransform); // リストに格納
+		};
 
-			// X: j * kBlockSize, Y: -1.0f (床の高さ), Z: i * kBlockSize
-			WorldTransform* worldTransform = new WorldTransform();
-			worldTransform->Initialize();
+	// レベルデザインに合わせて壁を配置
+	const float kOutWallY = 1.5f; // 地上高
+	const float kOutWallThickness = 1.0f; // 外壁の厚さ
+	const float kOutWallHalfThickness = kOutWallThickness * 0.5f;
+	const float kOutWallLength = kAreaSize; // 外壁の長さ
+	const float kOutWallHeight = 2.0f; // 外壁の高さ
 
-			// 床を構成するブロックの位置
-			worldTransform->translation_ = KamataEngine::Vector3{
-				j * kBlockSize_ /*- (kNumBlockHorizontal * kBlockSize_ / 2.0f)*/, // X軸
-				-1.0f, // Y軸（プレイヤーより下に配置）
-				i * kBlockSize_ - (kNumBlockVertical * kBlockSize_ / 2.0f) // Z軸
-			};
-			worldTransform->scale_ = KamataEngine::Vector3{ kBlockSize_, 1.0f, kBlockSize_ }; // Y軸を薄くする
+	const float kWallY = 1.5f; // 地上高
+	const float kWallThickness = 2.0f; // 壁の厚さ
+	const float kWallLength = 20.0f; // 壁の長さ
+	const float kWallHeight = 2.0f; // 壁の高さ
 
-			worldTransformBlocks_[i][j] = worldTransform;
-		}
-	}
+	// 四方の外壁
+	
+	// 北側の外壁
+	createWall(
+		KamataEngine::Vector3{ kpositionOfset + kOutWallHalfThickness, kOutWallY, kOutWallLength + kOutWallHalfThickness },
+		KamataEngine::Vector3{ kOutWallLength + kOutWallThickness, kOutWallHeight, kOutWallThickness }
+	);
 
-	// ジャンプ台、壁などは、上記のループ内で条件分岐を使って実装する
+	// 南側の外壁
+	createWall(
+		KamataEngine::Vector3{ kpositionOfset - kOutWallHalfThickness, kOutWallY, -kOutWallHalfThickness },
+		KamataEngine::Vector3{ kOutWallLength + kOutWallThickness, kOutWallHeight, kOutWallThickness }
+	);
+
+	// 東側の外壁
+	createWall(
+		KamataEngine::Vector3{ kOutWallLength + kOutWallHalfThickness, kOutWallY, kpositionOfset - kOutWallHalfThickness },
+		KamataEngine::Vector3{ kOutWallThickness, kOutWallHeight, kOutWallLength + kOutWallThickness }
+	);
+
+	// 西側の外壁
+	createWall(
+		KamataEngine::Vector3{ -kOutWallHalfThickness, kOutWallY, kpositionOfset + kOutWallHalfThickness },
+		KamataEngine::Vector3{ kOutWallThickness, kOutWallHeight, kOutWallLength + kOutWallThickness }
+	);
+
+	// 北側の壁 (Z = +10.0f のライン)
+	createWall(
+		KamataEngine::Vector3{ kpositionOfset + kBlockSize_ * 5.0f, kWallY, kpositionOfset + kBlockSize_ * 5.0f },
+		KamataEngine::Vector3{ kWallLength, kWallHeight, kWallThickness }
+	);
+
+	// 南側の壁 (Z = -10.0f のライン)
+	createWall(
+		KamataEngine::Vector3{ kpositionOfset - kBlockSize_ * 5.0f, kWallY, kpositionOfset - kBlockSize_ * 5.0f },
+		KamataEngine::Vector3{ kWallLength, kWallHeight, kWallThickness }
+	);
+
+	// 障害物 (中央付近)
+	createWall(
+		KamataEngine::Vector3{ kpositionOfset - kBlockSize_ * 3.0f, kWallY, kpositionOfset + kBlockSize_ * 2.0f },
+		KamataEngine::Vector3{ kBlockSize_ * 2.0f, kBlockSize_, kBlockSize_ * 2.0f }
+	);
 }
 
 void GameScene::GenarateEnemies(const Vector3& position) {
@@ -476,6 +492,48 @@ void GameScene::CheckAllCollisions() {
 		phase_ = Phase::kClear;
 	}
 
+#pragma endregion
+#pragma region 自キャラとブロックの当たり判定
+	// 判定対象1と2の座標
+	AABB playerAABB, blockAABB;
+
+	// プレイヤーのAABBと現在の速度を取得
+	playerAABB = player_->GetAABB();
+	Vector3 playerVelocity = player_->GetVelocity();
+
+	// 全ての衝突判定ブロックと自キャラの当たり判定
+	for (WorldTransform* block : collidableBlocks_) {
+		// ブロックのAABBを取得
+		blockAABB = GetAABB(*block);
+
+		// AABB同士の交差判定
+		if (IsCollision(playerAABB, blockAABB)) {
+
+			// 衝突を解決し、プレイヤーの移動量を修正
+
+			// 1. 衝突を解消するために必要な最小移動ベクトル(MTV)を取得
+			Vector3 resolveVector = CalculateAABBOverlap(playerAABB, blockAABB);
+
+			// 2. プレイヤーの座標をMTVの分だけ移動させて、めり込みを解除する
+			// resolveVectorには、XかZのどちらか一方にのみ、押し戻し量が入っている（MTV）
+			Vector3 pushBackVector = player_->GetTranslation();
+			pushBackVector += resolveVector;
+			player_->SetTranslation(pushBackVector);
+
+			// 3. 衝突が発生した軸方向の速度をリセット（壁にぶつかったら止まる）
+			if (std::abs(resolveVector.x) > 0.0f) {
+				// X軸方向のめり込みを解消した場合
+				playerVelocity.x = 0.0f;
+			}
+			if (std::abs(resolveVector.z) > 0.0f) {
+				// Z軸方向のめり込みを解消した場合
+				playerVelocity.z = 0.0f;
+			}
+		}
+	}
+
+	// 衝突解決後の速度をプレイヤーにフィードバック
+	player_->SetVelocity(playerVelocity);
 #pragma endregion
 }
 

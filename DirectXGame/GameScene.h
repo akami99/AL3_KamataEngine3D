@@ -5,10 +5,10 @@
 #include "Enemy.h"
 #include "Skydome.h"
 #include "Fade.h"
-//#include "MapChipField.h"
 #include "CameraController.h"
 #include "Door.h"
 #include <vector>
+#include <list>
 
 static const uint32_t kWindowWidth = 1280;
 static const uint32_t kWindowHeight = 720;
@@ -42,7 +42,7 @@ private:
 	KamataEngine::Model* modelSkydome_ = nullptr;
 	KamataEngine::Model* modelEnemy_ = nullptr;
 	KamataEngine::Model* modelDoor_ = nullptr;
-	KamataEngine::Model* modelBackGround_ = nullptr;
+	//KamataEngine::Model* modelBackGround_ = nullptr;
 
 	// カメラ
 	KamataEngine::Camera camera_;
@@ -51,10 +51,10 @@ private:
 	Skydome* skydome_ = nullptr;
 
 	// 背景
-	KamataEngine::WorldTransform worldTransformBackGround1_;
+	/*KamataEngine::WorldTransform worldTransformBackGround1_;
 	KamataEngine::WorldTransform worldTransformBackGround2_;
 	KamataEngine::WorldTransform worldTransformBackGround3_;
-	KamataEngine::WorldTransform worldTransformBackGround4_;
+	KamataEngine::WorldTransform worldTransformBackGround4_;*/
 
 	// マップチップフィールド
 	//MapChipField* mapChipField_;
@@ -69,8 +69,14 @@ private:
 	// 敵の数
 	static inline const int32_t kEnemyNum = 16;
 
-	const float kBlockSize_ = 2.0f; // ブロックのサイズ
-	std::vector<std::vector<KamataEngine::WorldTransform*>> worldTransformBlocks_;
+	const float kBlockSize_ = 2.0f; // ブロックのサイズ(2.0f)
+	const float kBlockHalfSize_ = kBlockSize_ * 0.5f;
+
+	// 衝突判定を行う壁・障害物ブロックのリスト
+	std::list<KamataEngine::WorldTransform*> collidableBlocks_;
+
+	// 巨大な床ブロック（描画専用）
+	KamataEngine::WorldTransform* floorTransform_ = nullptr;
 
 	CameraController* cameraController_ = nullptr;
 

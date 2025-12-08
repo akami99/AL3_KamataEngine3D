@@ -172,6 +172,10 @@ public:
 		return worldTransform_;
 	}
 
+	const KamataEngine::Vector3 GetTranslation() const {
+		return worldTransform_.translation_;
+	}
+
 	const KamataEngine::Vector3& GetVelocity() const {
 		return velocity_;
 	}
@@ -196,6 +200,15 @@ public:
 	bool IsCameraStop() const {
 		// 攻撃中ならカメラの追従を停止
 		return behavior_ == Behavior::kAttack;
+	}
+
+
+	void SetTranslation(KamataEngine::Vector3 translation) {
+		worldTransform_.translation_ = translation;
+	}
+
+	void SetVelocity(KamataEngine::Vector3 velocity) {
+		velocity_ = velocity;
 	}
 
 private:
