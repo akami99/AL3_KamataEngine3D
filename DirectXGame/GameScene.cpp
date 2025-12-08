@@ -56,7 +56,7 @@ void GameScene::Initialize() {
 	GenarateEnemies({ 6.0f * kBlockSize_, 1.0f, 17.0f * kBlockSize_ });
 	GenarateEnemies({ 10.0f * kBlockSize_, 1.0f, 14.0f * kBlockSize_ });
 	GenarateEnemies({ 13.0f * kBlockSize_, 1.0f, 12.0f * kBlockSize_ });
-	GenarateEnemies({ 4.0f * kBlockSize_, 1.0f, 10.0f * kBlockSize_ });
+	GenarateEnemies({ 5.0f * kBlockSize_, 1.0f, 10.0f * kBlockSize_ });
 	GenarateEnemies({ 7.0f * kBlockSize_, 1.0f, 10.0f * kBlockSize_ });
 	GenarateEnemies({ 17.0f * kBlockSize_, 1.0f, 6.0f * kBlockSize_ });
 
