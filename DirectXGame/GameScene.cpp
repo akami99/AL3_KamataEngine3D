@@ -457,6 +457,43 @@ void GameScene::GenarateEnemies(const Vector3& position) {
 }
 
 void GameScene::CheckAllCollisions() {
+#pragma region 自キャラの攻撃と敵の当たり判定
+	// プレイヤーが「攻撃中」かつ「突進フェーズ」の場合のみ判定
+	if (player_->GetBehavior() == Player::Behavior::kAttack &&
+		player_->GetAttackPhase() == Player::AttackPhase::Rush) {
+
+		// プレイヤーの攻撃範囲を取得
+		AABB attackBox = player_->GetAttackAABB();
+
+		for (Enemy *enemy : enemies_) {
+			// すでに死んでいる敵はスキップ
+			if (enemy->IsDead()) continue;
+
+			// 敵の当たり判定を取得
+			AABB enemyBox = enemy->GetAABB();
+
+			// GameSceneにある既存の衝突判定関数を利用
+			if (IsCollision(attackBox, enemyBox)) {
+				// 当たったら敵を撃破状態にする
+				enemy->OnSlay();
+
+				// (アドバイス) エフェクトなどを出すならここ
+				//deathParticles_->Emit(enemy->GetTranslation()); 
+			}
+		}
+	}
+
+	// --- 倒れた敵のクリーンアップ (アドバイスの内容) ---
+	// デスフラグが立っている敵をリストから削除し、メモリを解放する
+	enemies_.remove_if([](Enemy *enemy) {
+		if (enemy->IsDead()) {
+			delete enemy; // メモリ解放
+			return true;  // リストから削除
+		}
+		return false;
+		});
+
+#pragma endregion
 #pragma region 自キャラと敵キャラの当たり判定
 	// 判定対象1と2の座標
 	AABB aabb1, aabb2;

@@ -52,6 +52,9 @@ private:
 	// 経過時間
 	float walkTimer_ = 0.0f;
 
+	// デスフラグ
+	bool isDead_ = false;
+
 public:
 	/// <summary>
 	/// 初期化
@@ -79,5 +82,11 @@ public:
 
 	// AABBを取得
 	AABB GetAABB();
+
+	// デス判定を取得
+	bool IsDead() const {
+		return isDead_; }
+	// デス処理
+	void OnSlay() { isDead_ = true; }
 };
 

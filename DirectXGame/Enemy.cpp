@@ -29,6 +29,8 @@ void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
 	velocity_ = Vector3{ -kWalkSpeed, 0.0f, 0.0f };
 
 	walkTimer_ = 0.0f;
+
+	isDead_ = false;
 }
 
 void Enemy::Update() {
@@ -104,8 +106,8 @@ AABB Enemy::GetAABB() {
 
 	AABB aabb;
 
-	aabb.min = { worldPos.x - kWidth / 2.0f, worldPos.y - kWidth / 2.0f, worldPos.z - kWidth / 2.0f };
-	aabb.max = { worldPos.x + kWidth / 2.0f, worldPos.y + kWidth / 2.0f, worldPos.z + kWidth / 2.0f };
+	aabb.min = { worldPos.x - kWidth / 2.0f, worldPos.y - kHeight / 2.0f, worldPos.z - kWidth / 2.0f };
+	aabb.max = { worldPos.x + kWidth / 2.0f, worldPos.y + kHeight / 2.0f, worldPos.z + kWidth / 2.0f };
 
 	return aabb;
 }

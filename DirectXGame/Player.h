@@ -1,7 +1,7 @@
 #pragma once
 
-#include "KamataEngine.h"
 #include "EngineMath.h"
+#include "KamataEngine.h"
 
 class Enemy;
 
@@ -9,6 +9,22 @@ class Enemy;
 /// 自キャラ
 /// </summary>
 class Player {
+public:
+	// 振る舞い
+	enum class Behavior {
+		kUnknown = 0,
+		kRoot,   // 通常状態
+		kAttack, // 攻撃中
+		kDodge,  // 回避行動
+	};
+
+	// 攻撃フェーズ（型）
+	enum class AttackPhase {
+		Charge,     // 溜め
+		Rush,       // 突進
+		Aftertaste, // 余韻
+	};
+
 private:
 	// 方向
 	enum class Direction {
@@ -22,24 +38,9 @@ private:
 	Direction direction_ = Direction::kRight;
 
 	// 振る舞い
-	enum class Behavior {
-		kUnknown = 0,
-		kRoot,   // 通常状態
-		kAttack, // 攻撃中
-		kDodge,  // 回避行動
-	};
-
-	// 振る舞い
 	Behavior behavior_ = Behavior::kRoot;
 	// 次の振る舞いリクエスト
 	Behavior behaviorRequest_ = Behavior::kUnknown;
-
-	// 攻撃フェーズ（型）
-	enum class AttackPhase {
-		Charge,     // 溜め
-		Rush,       // 突進
-		Aftertaste, // 余韻
-	};
 
 	// 現在の攻撃フェーズ（変数）
 	AttackPhase attackPhase_;
@@ -55,21 +56,21 @@ private:
 
 	// 角
 	enum class Corner {
-		kRightBottom,    // 右下
-		kLeftBottom,     // 左下
-		kRightTop,       // 右上
-		kLeftTop,        // 左上
+		kRightBottom, // 右下
+		kLeftBottom,  // 左下
+		kRightTop,    // 右上
+		kLeftTop,     // 左上
 
-		kNumCorner       // 要素数
+		kNumCorner // 要素数
 
 	};
 
 	// マップとの当たり判定情報
 	struct CollisionMapinfo {
-		bool onCollisionCeiling_ = false; // 天井に衝突しているか
+		bool onCollisionCeiling_ = false;  // 天井に衝突しているか
 		bool onCollisionGround_ = false;   // 床に衝突しているか(着地しているか)
-		bool onCollisionWall_ = false;    // 左側に衝突しているか
-		KamataEngine::Vector3 moveAmount_;      // 移動量
+		bool onCollisionWall_ = false;     // 左側に衝突しているか
+		KamataEngine::Vector3 moveAmount_; // 移動量
 	};
 
 	// ワールド変換データ
@@ -117,7 +118,7 @@ private:
 	static inline const float kAttenuationWall = 1.0f;
 
 	// 攻撃ギミックの経過時間カウンター
-	float  attackParameter_ = 0.0f;
+	float attackParameter_ = 0.0f;
 	// 攻撃方向
 	KamataEngine::Vector3 attackDirection_ = {};
 	// 攻撃速度
@@ -126,6 +127,9 @@ private:
 	static inline const float kChargeTime = 0.1f;
 	static inline const float kRushTime = 0.02f;
 	static inline const float kAftertasteTime = 0.4f;
+
+	static inline const float kAttackWidth = 2.0f;  // 攻撃当たり判定の幅
+	static inline const float kAttackHeight = 2.0f; // 攻撃当たり判定の高さ
 
 	// 攻撃エフェクト
 	static inline const float kEffectOffsetLength = 2.0f; // 攻撃エフェクトのオフセット
@@ -136,7 +140,7 @@ private:
 	// 回避ギミックの経過時間カウンター
 	float dodgeParameter_ = 0.0f;
 	// 回避時間<秒>
-	static inline const float kDodgeMainTime = 0.15f;       // 回避行動の継続時間
+	static inline const float kDodgeMainTime = 0.15f;      // 回避行動の継続時間
 	static inline const float kDodgeAftertasteTime = 0.1f; // スケールを戻す時間
 	// 回避速度
 	static inline const float kDodgeSpeed = 0.5f; // 回避行動の速度
@@ -168,17 +172,11 @@ public:
 	// 衝突応答
 	void OnCollision(const Enemy* enemy);
 
-	const KamataEngine::WorldTransform& GetWorldTransform() const {
-		return worldTransform_;
-	}
+	const KamataEngine::WorldTransform& GetWorldTransform() const { return worldTransform_; }
 
-	const KamataEngine::Vector3 GetTranslation() const {
-		return worldTransform_.translation_;
-	}
+	const KamataEngine::Vector3 GetTranslation() const { return worldTransform_.translation_; }
 
-	const KamataEngine::Vector3& GetVelocity() const {
-		return velocity_;
-	}
+	const KamataEngine::Vector3& GetVelocity() const { return velocity_; }
 
 	// ワールド座標を取得
 	KamataEngine::Vector3 GetWorldPosition();
@@ -186,15 +184,20 @@ public:
 	// AABBを取得
 	AABB GetAABB();
 
+	// 攻撃AABBを取得
+	AABB GetAttackAABB();
+
+	// 振る舞いのgetter
+	Behavior GetBehavior() const { return behavior_; }
+
+	// 攻撃フェーズのgetter
+	AttackPhase GetAttackPhase() const { return attackPhase_; }
+
 	// デスフラグのgetter
-	bool IsDead() const {
-		return isDead_;
-	}
+	bool IsDead() const { return isDead_; }
 
 	// 無敵フラグのgetter
-	bool IsInvincible() const {
-		return isInvincible_;
-	}
+	bool IsInvincible() const { return isInvincible_; }
 
 	// カメラの追従を停止するかどうかのGetter
 	bool IsCameraStop() const {
@@ -202,14 +205,9 @@ public:
 		return behavior_ == Behavior::kAttack;
 	}
 
+	void SetTranslation(KamataEngine::Vector3 translation) { worldTransform_.translation_ = translation; }
 
-	void SetTranslation(KamataEngine::Vector3 translation) {
-		worldTransform_.translation_ = translation;
-	}
-
-	void SetVelocity(KamataEngine::Vector3 velocity) {
-		velocity_ = velocity;
-	}
+	void SetVelocity(KamataEngine::Vector3 velocity) { velocity_ = velocity; }
 
 private:
 	// 通常行動初期化
@@ -282,8 +280,7 @@ private:
 	/// </summary>
 	/// <param name="basePosition">コーナー位置の計算に使用する基準となる3次元ベクトル</param>
 	/// <returns>各コーナーの位置を格納した std::array<KamataEngine::Vector3, static_cast<uint32_t>(Corner::kNumCorner)></returns>
-	std::array<KamataEngine::Vector3, static_cast<uint32_t>(Corner::kNumCorner)>
-		CalculateCornerPositions(const KamataEngine::Vector3& basePosition);
+	std::array<KamataEngine::Vector3, static_cast<uint32_t>(Corner::kNumCorner)> CalculateCornerPositions(const KamataEngine::Vector3& basePosition);
 
 	/// <summary>
 	/// 衝突結果を適用
@@ -309,4 +306,3 @@ private:
 	/// <param name="info">衝突情報を含む CollisionMapinfo 型の参照</param>
 	void OnGroundSwitch(const CollisionMapinfo& info);
 };
-
