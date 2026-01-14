@@ -1,6 +1,6 @@
 #include "GameScene.h"
-#include "MatrixGenerators.h"
 #include "EngineMathFunctions.h"
+#include "MatrixGenerators.h"
 #include "WorldTransform.h"
 
 using namespace KamataEngine;
@@ -19,7 +19,7 @@ void GameScene::Initialize() {
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
 	modelEnemy_ = Model::CreateFromOBJ("enemy", true);
 	modelDoor_ = Model::CreateFromOBJ("door", true);
-	//modelBackGround_ = Model::CreateFromOBJ("background", true);
+	// modelBackGround_ = Model::CreateFromOBJ("background", true);
 
 	// カメラの初期化
 	camera_.Initialize();
@@ -42,23 +42,22 @@ void GameScene::Initialize() {
 	worldTransformBackGround4_.Initialize();
 	worldTransformBackGround4_.translation_ = Vector3{ 100.0f, -6.0f, 20.0f };*/
 
-
 	// 自キャラの生成
 	player_ = new Player();
 	// 座標を指定
-	Vector3 playerPosition = { 10.0f * kBlockSize_, 1.0f, 3.0f * kBlockSize_ };
+	Vector3 playerPosition = {10.0f * kBlockSize_, 1.0f, 3.0f * kBlockSize_};
 	// 自キャラの初期化
 	player_->Initialize(model_, modelAttack_, &camera_, playerPosition);
 
 	// 敵キャラの生成(奥側から)
-	GenarateEnemies({ 14.0f * kBlockSize_, 1.0f, 18.0f * kBlockSize_ });
-	GenarateEnemies({ 16.0f * kBlockSize_, 1.0f, 18.0f * kBlockSize_ });
-	GenarateEnemies({ 6.0f * kBlockSize_, 1.0f, 17.0f * kBlockSize_ });
-	GenarateEnemies({ 10.0f * kBlockSize_, 1.0f, 14.0f * kBlockSize_ });
-	GenarateEnemies({ 13.0f * kBlockSize_, 1.0f, 12.0f * kBlockSize_ });
-	GenarateEnemies({ 5.0f * kBlockSize_, 1.0f, 10.0f * kBlockSize_ });
-	GenarateEnemies({ 7.0f * kBlockSize_, 1.0f, 10.0f * kBlockSize_ });
-	GenarateEnemies({ 17.0f * kBlockSize_, 1.0f, 6.0f * kBlockSize_ });
+	GenerateEnemies({14.0f * kBlockSize_, 1.0f, 18.0f * kBlockSize_}, Enemy::Type::kShoot);
+	GenerateEnemies({16.0f * kBlockSize_, 1.0f, 18.0f * kBlockSize_}, Enemy::Type::kShoot);
+	GenerateEnemies({6.0f * kBlockSize_, 1.0f, 17.0f * kBlockSize_}, Enemy::Type::kShoot);
+	GenerateEnemies({10.0f * kBlockSize_, 1.0f, 14.0f * kBlockSize_}, Enemy::Type::kShoot);
+	GenerateEnemies({13.0f * kBlockSize_, 1.0f, 12.0f * kBlockSize_});
+	GenerateEnemies({5.0f * kBlockSize_, 1.0f, 10.0f * kBlockSize_});
+	GenerateEnemies({7.0f * kBlockSize_, 1.0f, 10.0f * kBlockSize_});
+	GenerateEnemies({17.0f * kBlockSize_, 1.0f, 6.0f * kBlockSize_});
 
 	// カメラコントローラーの初期化
 	// 生成
@@ -72,11 +71,11 @@ void GameScene::Initialize() {
 
 	// ゴールのドアを生成
 	door_ = new Door();
-	Vector3 doorPosition = { 19.0f * kBlockSize_, 1.0f, 19.0f * kBlockSize_ };
+	Vector3 doorPosition = {19.0f * kBlockSize_, 1.0f, 19.0f * kBlockSize_};
 	door_->Initialize(modelDoor_, &camera_, doorPosition);
 
 	// ブロックの生成
-	GenarateBlocks();
+	GenerateBlocks();
 
 	// デバッグカメラの生成
 	debugCamera_ = new DebugCamera(kWindowWidth, kWindowHeight);
@@ -168,7 +167,7 @@ void GameScene::Update() {
 
 	switch (phase_) {
 	case Phase::kFadeIn:
-		fade_->Update(); // フェードの更新
+		fade_->Update();           // フェードの更新
 		if (fade_->IsFinished()) { // フェードインが終了したら
 			phase_ = Phase::kPlay;
 		}
@@ -366,19 +365,19 @@ void GameScene::Draw() {
 	}
 }
 
-void GameScene::GenarateBlocks() {
+void GameScene::GenerateBlocks() {
 	// 床を生成
 
 	// 床のサイズ
 	const float kAreaSize = 40.0f;
-	const float kpositionOfset = kAreaSize * 0.5f;
+	const float kPositionOfset = kAreaSize * 0.5f;
 	// 床のWorldTransformを生成
 	floorTransform_ = new WorldTransform();
 	floorTransform_->Initialize();
 	// kAreaSize x kAreaSize の広さ
-	floorTransform_->scale_ = Vector3{ kAreaSize, 1.0f, kAreaSize };
+	floorTransform_->scale_ = Vector3{kAreaSize, 1.0f, kAreaSize};
 	// 位置を設定
-	floorTransform_->translation_ = Vector3{ kpositionOfset, 0.0f, kpositionOfset };
+	floorTransform_->translation_ = Vector3{kPositionOfset, 0.0f, kPositionOfset};
 
 	// 衝突判定を行う壁や障害物の生成 (collidableBlocks_ に格納)
 
@@ -389,69 +388,60 @@ void GameScene::GenarateBlocks() {
 		worldTransform->translation_ = pos;
 		worldTransform->scale_ = scale;
 		collidableBlocks_.push_back(worldTransform); // リストに格納
-		};
+	};
 
 	// レベルデザインに合わせて壁を配置
-	const float kOutWallY = 1.5f; // 地上高
+	const float kOutWallY = 1.5f;         // 地上高
 	const float kOutWallThickness = 1.0f; // 外壁の厚さ
 	const float kOutWallHalfThickness = kOutWallThickness * 0.5f;
 	const float kOutWallLength = kAreaSize; // 外壁の長さ
-	const float kOutWallHeight = 2.0f; // 外壁の高さ
+	const float kOutWallHeight = 2.0f;      // 外壁の高さ
 
-	const float kWallY = 1.5f; // 地上高
+	const float kWallY = 1.5f;         // 地上高
 	const float kWallThickness = 2.0f; // 壁の厚さ
-	const float kWallLength = 20.0f; // 壁の長さ
-	const float kWallHeight = 2.0f; // 壁の高さ
+	const float kWallLength = 20.0f;   // 壁の長さ
+	const float kWallHeight = 2.0f;    // 壁の高さ
 
 	// 四方の外壁
-	
+
 	// 北側の外壁
 	createWall(
-		KamataEngine::Vector3{ kpositionOfset + kOutWallHalfThickness, kOutWallY, kOutWallLength + kOutWallHalfThickness },
-		KamataEngine::Vector3{ kOutWallLength + kOutWallThickness, kOutWallHeight, kOutWallThickness }
-	);
+	    KamataEngine::Vector3{kPositionOfset + kOutWallHalfThickness, kOutWallY, kOutWallLength + kOutWallHalfThickness},
+	    KamataEngine::Vector3{kOutWallLength + kOutWallThickness, kOutWallHeight, kOutWallThickness});
 
 	// 南側の外壁
 	createWall(
-		KamataEngine::Vector3{ kpositionOfset - kOutWallHalfThickness, kOutWallY, -kOutWallHalfThickness },
-		KamataEngine::Vector3{ kOutWallLength + kOutWallThickness, kOutWallHeight, kOutWallThickness }
-	);
+	    KamataEngine::Vector3{kPositionOfset - kOutWallHalfThickness, kOutWallY, -kOutWallHalfThickness}, KamataEngine::Vector3{kOutWallLength + kOutWallThickness, kOutWallHeight, kOutWallThickness});
 
 	// 東側の外壁
 	createWall(
-		KamataEngine::Vector3{ kOutWallLength + kOutWallHalfThickness, kOutWallY, kpositionOfset - kOutWallHalfThickness },
-		KamataEngine::Vector3{ kOutWallThickness, kOutWallHeight, kOutWallLength + kOutWallThickness }
-	);
+	    KamataEngine::Vector3{kOutWallLength + kOutWallHalfThickness, kOutWallY, kPositionOfset - kOutWallHalfThickness},
+	    KamataEngine::Vector3{kOutWallThickness, kOutWallHeight, kOutWallLength + kOutWallThickness});
 
 	// 西側の外壁
 	createWall(
-		KamataEngine::Vector3{ -kOutWallHalfThickness, kOutWallY, kpositionOfset + kOutWallHalfThickness },
-		KamataEngine::Vector3{ kOutWallThickness, kOutWallHeight, kOutWallLength + kOutWallThickness }
-	);
+	    KamataEngine::Vector3{-kOutWallHalfThickness, kOutWallY, kPositionOfset + kOutWallHalfThickness}, KamataEngine::Vector3{kOutWallThickness, kOutWallHeight, kOutWallLength + kOutWallThickness});
 
 	// 北側の壁 (Z = +10.0f のライン)
-	createWall(
-		KamataEngine::Vector3{ kpositionOfset + kBlockSize_ * 5.0f, kWallY, kpositionOfset + kBlockSize_ * 5.0f },
-		KamataEngine::Vector3{ kWallLength, kWallHeight, kWallThickness }
-	);
+	createWall(KamataEngine::Vector3{kPositionOfset + kBlockSize_ * 5.0f, kWallY, kPositionOfset + kBlockSize_ * 5.0f}, KamataEngine::Vector3{kWallLength, kWallHeight, kWallThickness});
 
 	// 南側の壁 (Z = -10.0f のライン)
-	createWall(
-		KamataEngine::Vector3{ kpositionOfset - kBlockSize_ * 5.0f, kWallY, kpositionOfset - kBlockSize_ * 5.0f },
-		KamataEngine::Vector3{ kWallLength, kWallHeight, kWallThickness }
-	);
+	createWall(KamataEngine::Vector3{kPositionOfset - kBlockSize_ * 5.0f, kWallY, kPositionOfset - kBlockSize_ * 5.0f}, KamataEngine::Vector3{kWallLength, kWallHeight, kWallThickness});
 
 	// 障害物 (中央付近)
-	createWall(
-		KamataEngine::Vector3{ kpositionOfset - kBlockSize_ * 3.0f, kWallY, kpositionOfset + kBlockSize_ * 2.0f },
-		KamataEngine::Vector3{ kBlockSize_ * 2.0f, kBlockSize_, kBlockSize_ * 2.0f }
-	);
+	createWall(KamataEngine::Vector3{kPositionOfset - kBlockSize_ * 3.0f, kWallY, kPositionOfset + kBlockSize_ * 2.0f}, KamataEngine::Vector3{kBlockSize_ * 2.0f, kBlockSize_, kBlockSize_ * 2.0f});
 }
 
-void GameScene::GenarateEnemies(const Vector3& position) {
+void GameScene::GenerateEnemies(const Vector3& position, Enemy::Type type) {
 	Enemy* newEnemy = new Enemy();
 	// 敵キャラの初期化
-	newEnemy->Initialize(modelEnemy_, &camera_, position);
+	newEnemy->Initialize(modelEnemy_, &camera_, position, type);
+
+	// プレイヤー情報をセット
+	newEnemy->SetPlayer(player_);
+
+	// 弾のモデルをセット
+	newEnemy->SetBulletModel(modelParticle_);
 
 	enemies_.push_back(newEnemy);
 }
@@ -459,15 +449,15 @@ void GameScene::GenarateEnemies(const Vector3& position) {
 void GameScene::CheckAllCollisions() {
 #pragma region 自キャラの攻撃と敵の当たり判定
 	// プレイヤーが「攻撃中」かつ「突進フェーズ」の場合のみ判定
-	if (player_->GetBehavior() == Player::Behavior::kAttack &&
-		player_->GetAttackPhase() == Player::AttackPhase::Rush) {
+	if (player_->GetBehavior() == Player::Behavior::kAttack && player_->GetAttackPhase() == Player::AttackPhase::Rush) {
 
 		// プレイヤーの攻撃範囲を取得
 		AABB attackBox = player_->GetAttackAABB();
 
-		for (Enemy *enemy : enemies_) {
+		for (Enemy* enemy : enemies_) {
 			// すでに死んでいる敵はスキップ
-			if (enemy->IsDead()) continue;
+			if (enemy->IsDead())
+				continue;
 
 			// 敵の当たり判定を取得
 			AABB enemyBox = enemy->GetAABB();
@@ -478,20 +468,20 @@ void GameScene::CheckAllCollisions() {
 				enemy->OnSlay();
 
 				// (アドバイス) エフェクトなどを出すならここ
-				//deathParticles_->Emit(enemy->GetTranslation()); 
+				// deathParticles_->Emit(enemy->GetTranslation());
 			}
 		}
 	}
 
 	// --- 倒れた敵のクリーンアップ (アドバイスの内容) ---
 	// デスフラグが立っている敵をリストから削除し、メモリを解放する
-	enemies_.remove_if([](Enemy *enemy) {
+	enemies_.remove_if([](Enemy* enemy) {
 		if (enemy->IsDead()) {
 			delete enemy; // メモリ解放
 			return true;  // リストから削除
 		}
 		return false;
-		});
+	});
 
 #pragma endregion
 #pragma region 自キャラと敵キャラの当たり判定
@@ -586,7 +576,6 @@ void GameScene::ChangePhase() {
 			// 生成処理
 			deathParticles_ = new DeathParticles;
 			deathParticles_->Initialize(modelParticle_, &camera_, deathParticlesPosition);
-
 		}
 		break;
 	case Phase::kDeath:

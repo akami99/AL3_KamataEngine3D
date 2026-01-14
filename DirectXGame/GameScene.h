@@ -118,9 +118,9 @@ public:
 	}
 
 private:
-	void GenarateBlocks();
+	void GenerateBlocks();
 
-	void GenarateEnemies(const KamataEngine::Vector3& position);
+	void GenerateEnemies(const KamataEngine::Vector3& position, Enemy::Type type = Enemy::Type::kWark);
 
 	// 全ての当たり判定を行う
 	void CheckAllCollisions();
