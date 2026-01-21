@@ -4,6 +4,7 @@
 #include "KamataEngine.h"
 
 class Enemy;
+class EnemyBullet;
 
 /// <summary>
 /// 自キャラ
@@ -169,8 +170,11 @@ public:
 	/// <summary>
 	void Draw();
 
-	// 衝突応答
+	// 敵本体との衝突通知（既存）
 	void OnCollision(const Enemy* enemy);
+
+	// 敵の弾との衝突通知
+	void OnCollision(const EnemyBullet* bullet);
 
 	const KamataEngine::WorldTransform& GetWorldTransform() const { return worldTransform_; }
 

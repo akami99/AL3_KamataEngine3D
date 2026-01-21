@@ -112,13 +112,13 @@ void ChangeScene() {
 		if (gameScene->IsFinished()) {
 			if (gameScene->IsPlayerDead()) {
 				// シーン変更
-				scene = Scene::kTitle;
+				scene = Scene::kGame;
 				// 旧シーンの解放
 				delete gameScene;
 				gameScene = nullptr;
 				// 新シーンの生成と初期化
-				titleScene = new TitleScene;
-				titleScene->Initialize();
+				gameScene = new GameScene;
+				gameScene->Initialize();
 			} else {
 				// シーン変更
 				scene = Scene::kClear;

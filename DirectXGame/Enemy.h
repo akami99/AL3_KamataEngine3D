@@ -55,6 +55,9 @@ public:
 	// デス処理
 	void OnSlay() { isDead_ = true; }
 
+	// 弾のリストを取得
+	const std::list<EnemyBullet*>& GetBullets() const { return bullets_; }
+
 private:
 	// 行動タイプごとの更新処理
 	void UpdateWalk();

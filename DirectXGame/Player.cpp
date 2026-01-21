@@ -117,6 +117,16 @@ void Player::OnCollision(const Enemy* enemy) {
 	isDead_ = true;
 }
 
+void Player::OnCollision(const EnemyBullet* bullet) {
+	// 無敵中なら、何もせず処理を終了
+	if (isInvincible_) {
+		return;
+	}
+
+	(void)bullet;
+	isDead_ = true;
+}
+
 KamataEngine::Vector3 Player::GetWorldPosition() {
 	// ワールド座標を入れる変数
 	Vector3 worldPos;

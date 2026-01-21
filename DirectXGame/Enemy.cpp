@@ -154,7 +154,8 @@ void Enemy::UpdateWalk() {
 }
 
 void Enemy::UpdateShoot() {
-	if (!player_) {
+	// プレイヤーがいない、または死亡中なら何もしない
+	if (!player_ || player_->IsDead()) {
 		return;
 	}
 

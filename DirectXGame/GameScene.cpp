@@ -2,6 +2,7 @@
 #include "EngineMathFunctions.h"
 #include "MatrixGenerators.h"
 #include "WorldTransform.h"
+#include "EnemyBullet.h"
 
 using namespace KamataEngine;
 
@@ -295,6 +296,9 @@ void GameScene::Update() {
 			UpdateWorldTransform(*block);
 		}
 
+		// 敵の弾の衝突判定
+		CheckEnemyBullets();
+
 		if (deathParticles_ && deathParticles_->IsFinished()) {
 			// 死亡演出が終わったらフェードアウト開始
 			fade_->Start(Fade::Status::FadeOut, kFadeTime);
@@ -381,15 +385,6 @@ void GameScene::GenerateBlocks() {
 
 	// 衝突判定を行う壁や障害物の生成 (collidableBlocks_ に格納)
 
-	// 壁や障害物を作成するヘルパー関数
-	auto createWall = [&](const Vector3& pos, const Vector3& scale) {
-		WorldTransform* worldTransform = new WorldTransform();
-		worldTransform->Initialize();
-		worldTransform->translation_ = pos;
-		worldTransform->scale_ = scale;
-		collidableBlocks_.push_back(worldTransform); // リストに格納
-	};
-
 	// レベルデザインに合わせて壁を配置
 	const float kOutWallY = 1.5f;         // 地上高
 	const float kOutWallThickness = 1.0f; // 外壁の厚さ
@@ -447,7 +442,83 @@ void GameScene::GenerateEnemies(const Vector3& position, Enemy::Type type) {
 }
 
 void GameScene::CheckAllCollisions() {
-#pragma region 自キャラの攻撃と敵の当たり判定
+	CheckPlayerAndEnemies();
+	CheckEnemyBullets();
+	CheckPlayerAttack();
+	CheckPlayerAndDoor();
+	CheckPlayerAndBlocks();
+}
+
+void GameScene::CheckPlayerAndEnemies() {
+	// 自キャラの座標
+	 AABB playerAABB = player_->GetAABB();
+
+	// 自キャラと敵全ての当たり判定
+	for (Enemy* enemy : enemies_) {
+		// 敵の座標
+		AABB enemyAABB = enemy->GetAABB();
+
+		// AABB同士の交差判定
+		if (IsCollision(playerAABB, enemyAABB)) {
+			// 自キャラの衝突時関数を呼び出す
+			player_->OnCollision(enemy);
+			// 敵の衝突時関数を呼び出す
+			enemy->OnCollision(player_);
+
+			// プレイヤー死亡時判定
+			isPlayerDead_ = player_->IsDead();
+		}
+	}
+}
+
+void GameScene::CheckEnemyBullets() {
+	for (Enemy* enemy : enemies_) {
+		// 敵が発射した全ての弾を取得
+		const std::list<EnemyBullet*>& bullets = enemy->GetBullets();
+		// 各弾に対して当たり判定をチェック
+		for (EnemyBullet* bullet : bullets) {
+			if (bullet->IsDead()) {
+				// 死んでいる弾はスキップ
+				continue;
+			}
+			// 弾の座標
+			Vector3 bulletPos = bullet->GetWorldPosition();
+			float r = EnemyBullet::kRadius; // 弾の半径
+			// 弾のAABB
+			AABB bulletAABB;
+			bulletAABB.min = Vector3{bulletPos.x - r, bulletPos.y - r, bulletPos.z - r};
+			bulletAABB.max = Vector3{bulletPos.x + r, bulletPos.y + r, bulletPos.z + r};
+			// --- プレイヤーとの衝突判定 ---
+			if (player_ && !player_->IsDead()) {
+				// 自キャラのAABBを取得
+				AABB playerAABB = player_->GetAABB();
+				// AABB同士の交差判定
+				if (IsCollision(bulletAABB, playerAABB)) {
+					// 弾の衝突時関数を呼び出す
+					bullet->OnCollision();
+					// 自キャラの衝突時関数を呼び出す
+					player_->OnCollision(bullet);
+					// プレイヤー死亡時判定
+					isPlayerDead_ = player_->IsDead();
+				}
+			}
+
+			// --- 壁（ブロック）との衝突判定 ---
+			for (WorldTransform* block : collidableBlocks_) {
+				// ブロックのAABBを取得
+				AABB blockAABB = GetAABB(*block);
+
+				if (IsCollision(bulletAABB, blockAABB)) {
+					// 壁に当たったら弾だけ消す
+					bullet->OnCollision();
+					break; // この弾はもう消えたので、他のブロックとの判定は不要
+				}
+			}
+		}
+	}
+}
+
+void GameScene::CheckPlayerAttack() {
 	// プレイヤーが「攻撃中」かつ「突進フェーズ」の場合のみ判定
 	if (player_->GetBehavior() == Player::Behavior::kAttack && player_->GetAttackPhase() == Player::AttackPhase::Rush) {
 
@@ -467,13 +538,13 @@ void GameScene::CheckAllCollisions() {
 				// 当たったら敵を撃破状態にする
 				enemy->OnSlay();
 
-				// (アドバイス) エフェクトなどを出すならここ
+				// エフェクトなどを出すならここ
 				// deathParticles_->Emit(enemy->GetTranslation());
 			}
 		}
 	}
 
-	// --- 倒れた敵のクリーンアップ (アドバイスの内容) ---
+	// --- 倒れた敵のクリーンアップ ---
 	// デスフラグが立っている敵をリストから削除し、メモリを解放する
 	enemies_.remove_if([](Enemy* enemy) {
 		if (enemy->IsDead()) {
@@ -481,46 +552,23 @@ void GameScene::CheckAllCollisions() {
 			return true;  // リストから削除
 		}
 		return false;
-	});
+		});
+}
 
-#pragma endregion
-#pragma region 自キャラと敵キャラの当たり判定
-	// 判定対象1と2の座標
-	AABB aabb1, aabb2;
-
-	// 自キャラの座標
-	aabb1 = player_->GetAABB();
-
-	// 自キャラと敵弾全ての当たり判定
-	for (Enemy* enemy : enemies_) {
-		// 敵弾の座標
-		aabb2 = enemy->GetAABB();
-
-		// AABB同士の交差判定
-		if (IsCollision(aabb1, aabb2)) {
-			// 自キャラの衝突時関数を呼び出す
-			player_->OnCollision(enemy);
-			// 敵の衝突時関数を呼び出す
-			enemy->OnCollision(player_);
-
-			// プレイヤー死亡時判定
-			isPlayerDead_ = player_->IsDead();
-		}
-	}
-
-#pragma endregion
-#pragma region 自キャラとドアの当たり判定
+void GameScene::CheckPlayerAndDoor() {
+	// 自キャラのAABBを取得
+	AABB playerAABB = player_->GetAABB();
 	// ドアの座標
-	aabb2 = door_->GetAABB();
+	AABB doorAABB = door_->GetAABB();
 
 	// 自キャラとドアの当たり判定
-	if (IsCollision(aabb1, aabb2)) {
+	if (IsCollision(playerAABB, doorAABB)) {
 		// プレイヤーがドアに触れたら即座にクリアフェーズへ移行
 		phase_ = Phase::kClear;
 	}
+}
 
-#pragma endregion
-#pragma region 自キャラとブロックの当たり判定
+void GameScene::CheckPlayerAndBlocks() {
 	// 判定対象1と2の座標
 	AABB playerAABB, blockAABB;
 
@@ -561,7 +609,14 @@ void GameScene::CheckAllCollisions() {
 
 	// 衝突解決後の速度をプレイヤーにフィードバック
 	player_->SetVelocity(playerVelocity);
-#pragma endregion
+}
+
+void GameScene::createWall(const KamataEngine::Vector3& position, const KamataEngine::Vector3& scale) {
+	WorldTransform* worldTransform = new WorldTransform();
+	worldTransform->Initialize();
+	worldTransform->translation_ = position;
+	worldTransform->scale_ = scale;
+	collidableBlocks_.push_back(worldTransform); // リストに格納
 }
 
 void GameScene::ChangePhase() {

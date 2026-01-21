@@ -122,8 +122,22 @@ private:
 
 	void GenerateEnemies(const KamataEngine::Vector3& position, Enemy::Type type = Enemy::Type::kWark);
 
+	/// 衝突判定関数群
 	// 全ての当たり判定を行う
 	void CheckAllCollisions();
+	// プレイヤーと敵の衝突判定
+	void CheckPlayerAndEnemies();
+	// 敵の弾の衝突判定
+	void CheckEnemyBullets();
+	// プレイヤーの攻撃の衝突判定
+	void CheckPlayerAttack();
+	// プレイヤーとドアの衝突判定
+	void CheckPlayerAndDoor();
+	// ブロックと自キャラの衝突判定
+	void CheckPlayerAndBlocks();
+
+	// ブロック生成補助関数
+	void createWall(const KamataEngine::Vector3& position, const KamataEngine::Vector3& scale);
 
 	void ChangePhase();
 };
