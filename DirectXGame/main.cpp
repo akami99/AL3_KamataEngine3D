@@ -136,7 +136,7 @@ void ChangeScene() {
 	case Scene::kGame:
 		if (gameScene->IsFinished()) {
 			// A. ステージセレクトへ戻る場合
-			if (gameScene->IsBackToStageSelect()) {
+			if (gameScene->IsBackToStageSelect() || gameScene->IsPlayerDead()) {
 				scene = Scene::kStageSelect;
 				delete gameScene;
 				gameScene = nullptr;
@@ -144,8 +144,8 @@ void ChangeScene() {
 				stageSelectScene = new StageSelectScene;
 				stageSelectScene->Initialize();
 			}
-			// B. タイトルへ戻る場合 (リタイア or 死亡)
-			else if (gameScene->IsRetire() || gameScene->IsPlayerDead()) {
+			// B. タイトルへ戻る場合 (リタイア)
+			else if (gameScene->IsRetire()) {
 				scene = Scene::kTitle;
 				delete gameScene;
 				gameScene = nullptr;
