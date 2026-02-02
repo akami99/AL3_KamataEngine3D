@@ -135,22 +135,33 @@ void ChangeScene() {
 
 	case Scene::kGame:
 		if (gameScene->IsFinished()) {
-			if (gameScene->IsPlayerDead()) {
-				// シーン変更
+			// A. ステージセレクトへ戻る場合
+			if (gameScene->IsBackToStageSelect()) {
 				scene = Scene::kStageSelect;
-				// 旧シーンの解放
 				delete gameScene;
 				gameScene = nullptr;
-				// 新シーンの生成と初期化
+				// ステージセレクトシーンを生成・初期化
 				stageSelectScene = new StageSelectScene;
 				stageSelectScene->Initialize();
-			} else {
-				// シーン変更
-				scene = Scene::kClear;
-				// 旧シーンの解放
+			}
+			// B. タイトルへ戻る場合 (リタイア or 死亡)
+			else if (gameScene->IsRetire() || gameScene->IsPlayerDead()) {
+				scene = Scene::kTitle;
 				delete gameScene;
 				gameScene = nullptr;
-				// 新シーンの生成と初期化
+				titleScene = new TitleScene;
+				titleScene->Initialize();
+			}
+			// C. ゲームクリアの場合
+			else {
+				// 次のステージへ進めるためにインデックスを増やす
+				// (StageSelectSceneの静的メンバを操作)
+				StageSelectScene::currentStageIndex_++;
+
+
+				scene = Scene::kClear;
+				delete gameScene;
+				gameScene = nullptr;
 				gameClearScene = new GameClearScene;
 				gameClearScene->Initialize();
 			}
@@ -158,14 +169,14 @@ void ChangeScene() {
 		break;
 	case Scene::kClear:
 		if (gameClearScene->IsFinished()) {
-			// シーン変更
-			scene = Scene::kTitle;
-			// 旧シーンの解放
+			// タイトルではなくステージセレクトへ戻す
+			scene = Scene::kStageSelect;
+
 			delete gameClearScene;
 			gameClearScene = nullptr;
-			// 新シーンの生成と初期化
-			titleScene = new TitleScene;
-			titleScene->Initialize();
+
+			stageSelectScene = new StageSelectScene;
+			stageSelectScene->Initialize();
 		}
 		break;
 	}

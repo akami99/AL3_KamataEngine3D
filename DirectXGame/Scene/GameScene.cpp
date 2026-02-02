@@ -20,6 +20,9 @@ void GameScene::Initialize(int stageNo) {
 	count2Handle_ = TextureManager::Load("./Resources/startGame/count2.png");
 	count1Handle_ = TextureManager::Load("./Resources/startGame/count1.png");
 	goHandle_ = TextureManager::Load("./Resources/startGame/go.png");
+	pauseBGHandle_ = TextureManager::Load("./Resources/pause/pauseBG.png");
+	pauseCursorHandle_ = TextureManager::Load("./Resources/pause/cursor.png");
+	pauseButtonHandle_ = TextureManager::Load("./Resources/pause/button.png");
 
 	// 3Dモデルデータの生成
 	model_ = Model::CreateFromOBJ("player", true);
@@ -37,6 +40,9 @@ void GameScene::Initialize(int stageNo) {
 	spriteCount2_ = Sprite::Create(count2Handle_, { 640.0f, 360.0f }, { 1.0f, 1.0f, 1.0f, 0.8f }, { 0.5f, 0.5f });
 	spriteCount1_ = Sprite::Create(count1Handle_, { 640.0f, 360.0f }, { 1.0f, 1.0f, 1.0f, 0.8f }, { 0.5f, 0.5f });
 	spriteGo_ = Sprite::Create(goHandle_, { 640.0f, 360.0f }, { 1.0f, 1.0f, 1.0f, 0.8f }, { 0.5f, 0.5f });
+	spritePauseBG_ = Sprite::Create(pauseBGHandle_, { 640.0f, 360.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 0.5f, 0.5f });
+	spritePauseCursor_ = Sprite::Create(pauseCursorHandle_, { 400.0f, 360.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, { 0.5f, 0.5f });
+	spritePauseButton_ = Sprite::Create(pauseButtonHandle_, { 20.0f, 20.0f }, { 1.0f, 1.0f, 1.0f, 1.0f });
 
 	// カメラの初期化
 	camera_.Initialize();
@@ -97,6 +103,12 @@ GameScene::~GameScene() {
 	spriteCount1_ = nullptr;
 	delete spriteGo_;
 	spriteGo_ = nullptr;
+	delete spritePauseBG_;
+	spritePauseBG_ = nullptr;
+	delete spritePauseCursor_;
+	spritePauseCursor_ = nullptr;
+	delete spritePauseButton_;
+	spritePauseButton_ = nullptr;
 	// フェード用オブジェクトの解放
 	delete fade_;
 	fade_ = nullptr;
@@ -183,6 +195,14 @@ void GameScene::Update() {
 			tutorial_->Open();
 		}
 
+		// ポーズキー（例: TABキー）が押されたらポーズ状態へ
+		if (Input::GetInstance()->TriggerKey(DIK_ESCAPE)) {
+			phase_ = Phase::kPause;
+			// カーソルを初期位置（Continue）にリセット
+			pauseCursor_ = 0;
+			// 音楽を一時停止するなどの処理があればここに
+		}
+
 		// 天球の更新
 		skydome_->Update();
 
@@ -223,6 +243,55 @@ void GameScene::Update() {
 		ChangePhase();
 
 		break;
+
+	case Phase::kPause:
+		// --- ポーズ中の処理 ---
+
+		// 1. カーソル移動（上）
+		if (Input::GetInstance()->TriggerKey(DIK_W) || Input::GetInstance()->TriggerKey(DIK_UP)) {
+			pauseCursor_--;
+			if (pauseCursor_ < 0) {
+				pauseCursor_ = static_cast<int>(PauseOption::kNumOptions) - 1; // 一番下へ
+			}
+		}
+		// 2. カーソル移動（下）
+		if (Input::GetInstance()->TriggerKey(DIK_S) || Input::GetInstance()->TriggerKey(DIK_DOWN)) {
+			pauseCursor_++;
+			if (pauseCursor_ >= static_cast<int>(PauseOption::kNumOptions)) {
+				pauseCursor_ = 0; // 一番上へ
+			}
+		}
+
+		// 3. 決定操作（SPACE or ENTER）
+		if (Input::GetInstance()->TriggerKey(DIK_SPACE) || Input::GetInstance()->TriggerKey(DIK_RETURN)) {
+			Input::GetInstance()->Initialize();
+			// 選択肢に応じた処理
+			PauseOption selection = static_cast<PauseOption>(pauseCursor_);
+
+			if (selection == PauseOption::kContinue) {
+				// ゲーム再開
+				phase_ = Phase::kPlay;
+			} else if (selection == PauseOption::kStageSelect) {
+				// ステージセレクトへ戻る処理
+				isBackToStageSelect_ = true; // ステージセレクトへ戻るフラグを立てる
+				// フェードアウト
+				fade_->Start(Fade::Status::FadeOut, kFadeTime);
+				phase_ = Phase::kFadeOut;
+			} else if (selection == PauseOption::kTitle) {
+				// タイトルへ戻る
+				isRetire_ = true;
+				// フェードアウト
+				fade_->Start(Fade::Status::FadeOut, kFadeTime);
+				phase_ = Phase::kFadeOut;
+			}
+		}
+
+		// ポーズキー（TAB）でキャンセル（コンティニューと同じ挙動）
+		if (Input::GetInstance()->TriggerKey(DIK_ESCAPE)) {
+			phase_ = Phase::kPlay;
+		}
+		break;
+
 	case Phase::kDeath:
 		// 天球の更新
 		skydome_->Update();
@@ -350,8 +419,28 @@ void GameScene::Draw() {
 		}
 	}
 
-	// 操作説明を表示するキー表示
-	spriteTutorialButton_->Draw();
+	// プレイ中 または ポーズ中ならUIを表示
+	if (phase_ == Phase::kPlay || phase_ == Phase::kPause) {
+		// 通常のゲームUI（ライフやスコアなど）を描画
+
+	    // 操作説明を表示するキー表示
+		spriteTutorialButton_->Draw();
+		spritePauseButton_->Draw();
+	}
+
+	// ★ポーズ中なら、追加でポーズメニューを描画
+	if (phase_ == Phase::kPause) {
+		// 1. 半透明の黒背景などを描画して画面を暗くすると見やすい（任意）
+		spritePauseBG_->Draw();
+
+		// 2. メニュー文字の描画
+
+		// カーソル位置に合わせて色を変えたり、カーソル画像を描画したりする
+		Vector2 cursorPos = { 440.0f, 330.0f + pauseCursor_ * 85.0f };
+		spritePauseCursor_->SetPosition(cursorPos);
+		spritePauseCursor_->Draw();
+		
+	}
 
 	// フェードイン中/フェードアウト中はフェードの描画を行う
 	if (phase_ == Phase::kFadeIn || phase_ == Phase::kFadeOut) {
@@ -478,15 +567,7 @@ void GameScene::CheckPlayerAndDoor() {
 
 	// 自キャラとドアの当たり判定
 	if (IsCollision(playerAABB, doorAABB)) {
-		// 次のステージへ進む
-		stageNo_++;
-
-		// ステージ3までは次へ、それ以降はクリア画面へ
-		if (stageNo_ <= 3) {
-			LoadStage(); // 次のJSONを読み込んでリセット
-		} else {
-			phase_ = Phase::kClear; // 全ステージクリア！
-		}
+		phase_ = Phase::kClear; 
 	}
 }
 

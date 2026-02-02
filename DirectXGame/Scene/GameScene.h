@@ -20,6 +20,7 @@ private:
 		kFadeIn, // フェードイン
 		kStartProduction, // ゲーム開始演出（条件表示・カウントダウン）
 		kPlay,   // ゲームプレイ
+		kPause,  // ポーズ中
 		kDeath,  // デス演出
 		kFadeOut,// フェードアウト
 		kClear   // ゲームクリア
@@ -27,6 +28,31 @@ private:
 
 	// ゲームの現在フェーズ（変数）
 	Phase phase_ = Phase::kFadeIn;
+
+	// ポーズメニューの選択肢
+	enum class PauseOption {
+		kContinue,      // ゲーム再開
+		kStageSelect,   // ステージ選択へ（今回は再起動かタイトル扱い）
+		kTitle,         // タイトルへ
+		kNumOptions     // 選択肢の数
+	};
+
+	// ポーズ中の選択カーソル（0:Continue, 1:StageSelect, 2:Title）
+	int pauseCursor_ = 0;
+
+	// タイトルへ戻るフラグ（main.cppで判定するために使う）
+	bool isRetire_ = false;
+	// ステージセレクトへ戻るフラグ
+	bool isBackToStageSelect_ = false;
+
+	// ★必要であればポーズ画面用のスプライトやモデル変数をここに追加
+	uint32_t pauseBGHandle_ = 0;
+	uint32_t pauseCursorHandle_ = 0;
+	uint32_t pauseButtonHandle_ = 0;
+
+	KamataEngine::Sprite* spritePauseBG_ = nullptr;
+	KamataEngine::Sprite* spritePauseCursor_ = nullptr;
+	KamataEngine::Sprite* spritePauseButton_ = nullptr;
 
 	// 現在のステージ番号 (1からスタート)
 	int stageNo_ = 1;
@@ -131,6 +157,11 @@ public:
 	bool IsFinished() const {
 		return finished_;
 	}
+
+	// 途中リタイア（タイトルへ戻る）したかどうか
+	bool IsRetire() const { return isRetire_; }
+	// 追加: ステージセレクトへ戻るかどうかを取得
+	bool IsBackToStageSelect() const { return isBackToStageSelect_; }
 
 private:
 	/// 衝突判定関数群

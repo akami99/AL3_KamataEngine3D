@@ -41,6 +41,10 @@ public:
 	// 選択されたステージ番号を取得（1～）
 	int GetSelectedStageNo() const { return currentStageIndex_ + 1; }
 
+public:
+	// 現在選択中のインデックス（staticにすることでシーンを作り直しても記憶する）
+	static int currentStageIndex_;
+
 private:
 	// メンバ変数
 	Phase phase_ = Phase::kFadeIn;
@@ -74,8 +78,6 @@ private:
 	// ステージ数
 	static const int kStageCount = 3;
 
-	// 現在選択中のインデックス（staticにすることでシーンを作り直しても記憶する）
-	static int currentStageIndex_;
 
 	// 回転アニメーション用変数
 	float currentRotSpeed_ = kBaseRotSpeed;
