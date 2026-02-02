@@ -26,26 +26,27 @@ void CameraController::Update() {
 	if (target_->IsCameraStop()) {
 		// 追従対象の座標は更新するがカメラの座標は更新しない
 		Vector3 targetVelocity = target_->GetVelocity();
-		targetPosition_ = targetWorldTransform.translation_ + TargetOffset_ + targetVelocity * kVelocityBias;
+		targetPosition_ = targetWorldTransform.translation_ + TargetOffset_;
 
-		// 追従をスキップ
 	} else {
-		// 追従対象とオフセットと追従対象の速度からカメラの目標座標を計算
+		// --- 目標座標の計算 ---
 		Vector3 targetVelocity = target_->GetVelocity();
-		targetPosition_ = targetWorldTransform.translation_ + TargetOffset_ + targetVelocity * kVelocityBias;
 
-		// 座標補間によりゆったり追従
-		camera_.translation_.x = Lerp(camera_.translation_.x, targetPosition_.x, kInterpolationRate);
+		float velocityBias = 0.0f;
+		targetPosition_ = targetWorldTransform.translation_ + TargetOffset_ + targetVelocity * velocityBias;
+
+		// --- 座標補間（Lerp）によりゆったり追従 ---
+		// 目安: 0.1f (ゆったり) ～ 0.2f (キビキビ)
+		float interpRate = 0.1f; // 元の kInterpolationRate が大きすぎる場合は下げる
+
+		camera_.translation_.x = Lerp(camera_.translation_.x, targetPosition_.x, interpRate);
+
 		camera_.translation_.y = targetPosition_.y;
-		camera_.translation_.z = Lerp(camera_.translation_.z, targetPosition_.z, kInterpolationRate);
 
-		// 追従対象が画面外に出ないように補正
-		camera_.translation_.x = (std::max)(camera_.translation_.x, targetPosition_.x + kMargin.left);
-		camera_.translation_.x = (std::min)(camera_.translation_.x, targetPosition_.x + kMargin.right);
-		camera_.translation_.z = (std::max)(camera_.translation_.z, targetPosition_.z + kMargin.bottom);
-		camera_.translation_.z = (std::min)(camera_.translation_.z, targetPosition_.z + kMargin.top);
+		camera_.translation_.z = Lerp(camera_.translation_.z, targetPosition_.z, interpRate);
 	}
-	// 移動範囲制限
+
+	// --- 移動範囲制限（ステージ端など） ---
 	camera_.translation_.x = std::clamp(camera_.translation_.x, movableArea_.left, movableArea_.right);
 	camera_.translation_.z = std::clamp(camera_.translation_.z, movableArea_.bottom, movableArea_.top);
 
