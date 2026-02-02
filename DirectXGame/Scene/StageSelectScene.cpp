@@ -11,9 +11,14 @@ StageSelectScene::~StageSelectScene() {
 	// フェード用オブジェクトの解放
 	delete fade_;
 	fade_ = nullptr;
+	delete spriteTutorialButton_;
+	spriteTutorialButton_ = nullptr;
 	// 天球の解放
 	delete skydome_;
 	skydome_ = nullptr;
+	// チュートリアルを解放
+	delete tutorial_;
+	tutorial_ = nullptr;
 	// 3Dモデルデータの解放
 	delete modelSkydome_;
 	modelSkydome_ = nullptr;
@@ -35,6 +40,11 @@ void StageSelectScene::Initialize() {
 	// モデル生成（板モデルなどを読み込む。ここではcubeを代用中）
 	modelIcon_ = Model::CreateFromOBJ("cube", true);
 	modelSkydome_ = Model::CreateFromOBJ("skydome", true);
+
+	// ファイル名を指定してテクスチャを読み込む
+	tutorialButtonHandle_ = TextureManager::Load("./Resources/tutorialButton/tutorialButton.png");
+
+	spriteTutorialButton_ = Sprite::Create(tutorialButtonHandle_, { 15.0f, 625.0f }, { 1.0f, 1.0f, 1.0f, 0.8f });
 
 	// カメラ初期化
 	camera_.Initialize();
@@ -72,6 +82,17 @@ void StageSelectScene::Initialize() {
 
 	// 最初に選択されているアイコンのために回転速度をセット
 	currentRotSpeed_ = kSelectRotSpeed;
+
+
+	// 操作方法表示
+	tutorial_ = new Tutorial();
+	tutorial_->Initialize();
+
+	// ページ（モデル）を追加
+	// Resourcesフォルダに "tutorial_page1" などのOBJフォルダを用意してください
+	tutorial_->AddPage("tutorial_move");
+	tutorial_->AddPage("tutorial_dush");
+	tutorial_->AddPage("tutorial_attack");
 }
 
 void StageSelectScene::Update() {
@@ -88,6 +109,17 @@ void StageSelectScene::Update() {
 		break;
 
 	case Phase::kMain:
+		// チュートリアル中はゲームの更新を止める場合
+		if (tutorial_->IsActive()) {
+			tutorial_->Update(camera_);
+			return; // ここでreturnするとゲーム本編が止まる
+		}
+		// チュートリアル開始
+		if (Input::GetInstance()->TriggerKey(DIK_T)) {
+			// 開始
+			tutorial_->Open();
+		}
+
 		// --- 選択操作 ---
 		if (Input::GetInstance()->TriggerKey(DIK_D)) {
 			if (currentStageIndex_ < kStageCount - 1) {
@@ -181,7 +213,17 @@ void StageSelectScene::Draw() {
 		modelIcon_->Draw(*iconTransforms_[i], camera_);
 	}
 
+	// 最前面に描画
+	tutorial_->Draw(camera_);
+
 	Model::PostDraw();
+
+	Sprite::PreDraw(dxCommon->GetCommandList());
+
+	// 操作説明を表示するキー表示
+	spriteTutorialButton_->Draw();
+
+	Sprite::PostDraw();
 
 	// フェード描画
 	fade_->Draw();

@@ -14,6 +14,7 @@ void GameScene::Initialize(int stageNo) {
 	stageNo_ = stageNo;
 
 	// ファイル名を指定してテクスチャを読み込む
+	tutorialButtonHandle_ = TextureManager::Load("./Resources/tutorialButton/tutorialButton.png");
 
 	// 3Dモデルデータの生成
 	model_ = Model::CreateFromOBJ("player", true);
@@ -24,6 +25,8 @@ void GameScene::Initialize(int stageNo) {
 	modelEnemy_ = Model::CreateFromOBJ("enemy", true);
 	modelEnemyBullet_ = modelParticle_; // 敵の弾はパーティクルモデルを使い回す
 	modelDoor_ = Model::CreateFromOBJ("door", true);
+
+	spriteTutorialButton_ = Sprite::Create(tutorialButtonHandle_, { 15.0f, 625.0f }, {1.0f, 1.0f, 1.0f, 0.8f});
 
 	// カメラの初期化
 	camera_.Initialize();
@@ -59,9 +62,21 @@ void GameScene::Initialize(int stageNo) {
 
 	// 追従カメラの更新
 	cameraController_->Update();
+
+	// 操作方法表示
+	tutorial_ = new Tutorial();
+	tutorial_->Initialize();
+
+	// ページ（モデル）を追加
+	// Resourcesフォルダに "tutorial_page1" などのOBJフォルダを用意してください
+	tutorial_->AddPage("tutorial_move");
+	tutorial_->AddPage("tutorial_dush");
+	tutorial_->AddPage("tutorial_attack");
 }
 
 GameScene::~GameScene() {
+	delete spriteTutorialButton_;
+	spriteTutorialButton_ = nullptr;
 	// フェード用オブジェクトの解放
 	delete fade_;
 	fade_ = nullptr;
@@ -75,6 +90,9 @@ GameScene::~GameScene() {
 	// ステージの解放
 	delete stage_;
 	stage_ = nullptr;
+	// チュートリアルを解放
+	delete tutorial_;
+	tutorial_ = nullptr;
 	// 追従カメラの解放
 	delete cameraController_;
 	// デバッグカメラの解放
@@ -97,7 +115,6 @@ GameScene::~GameScene() {
 }
 
 void GameScene::Update() {
-
 	switch (phase_) {
 	case Phase::kFadeIn:
 		fade_->Update();           // フェードの更新
@@ -119,6 +136,17 @@ void GameScene::Update() {
 		}
 		break;
 	case Phase::kPlay:
+		// チュートリアル中はゲームの更新を止める場合
+		if (tutorial_->IsActive()) {
+			tutorial_->Update(camera_);
+			return; // ここでreturnするとゲーム本編が止まる
+		}
+		// チュートリアル開始
+		if (Input::GetInstance()->TriggerKey(DIK_T)) {
+			// 開始
+			tutorial_->Open();
+		}
+
 		// 天球の更新
 		skydome_->Update();
 
@@ -236,15 +264,24 @@ void GameScene::Draw() {
 	// ステージの描画
 	stage_->Draw(camera_);
 
+
+	// 最前面に描画
+	tutorial_->Draw(camera_);
+
 	// 3Dモデル描画後処理
 	Model::PostDraw();
 
+	Sprite::PreDraw(dxCommon->GetCommandList());
+
+	// 操作説明を表示するキー表示
+	spriteTutorialButton_->Draw();
+
 	// フェードイン中/フェードアウト中はフェードの描画を行う
 	if (phase_ == Phase::kFadeIn || phase_ == Phase::kFadeOut) {
-		Sprite::PreDraw(dxCommon->GetCommandList());
 		fade_->Draw();
-		Sprite::PostDraw();
 	}
+
+	Sprite::PostDraw();
 }
 
 void GameScene::CheckAllCollisions() {

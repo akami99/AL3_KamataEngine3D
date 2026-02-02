@@ -3,6 +3,7 @@
 #include "KamataEngine.h"
 #include "Skydome.h"
 #include "Fade.h"
+#include "Tutorial.h"
 
 /// <summary>
 /// タイトルシーン
@@ -48,6 +49,15 @@ private:
 
 	// カメラ
 	KamataEngine::Camera camera_;
+
+	// 操作方法
+	Tutorial* tutorial_ = nullptr;
+
+	// テクスチャハンドル
+	uint32_t tutorialButtonHandle_ = 0;
+
+	// 2Dテクスチャ
+	KamataEngine::Sprite* spriteTutorialButton_ = nullptr;
 
 	// 終了フラグ
 	bool finished_ = false;

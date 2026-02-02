@@ -5,6 +5,7 @@
 #include "Fade.h"
 #include "CameraController.h"
 #include "Stage.h"
+#include "Tutorial.h"
 #include <vector>
 #include <list>
 
@@ -34,6 +35,7 @@ private:
 	static inline const float kFadeTime = 2.0f;
 
 	// テクスチャハンドル
+	uint32_t tutorialButtonHandle_ = 0;
 
 	// 3Dモデルデータ
 	KamataEngine::Model* model_ = nullptr;
@@ -45,6 +47,9 @@ private:
 	KamataEngine::Model* modelEnemyBullet_ = nullptr;
 	KamataEngine::Model* modelDoor_ = nullptr;
 
+	// 2Dテクスチャ
+	KamataEngine::Sprite* spriteTutorialButton_ = nullptr;
+
 	// カメラ
 	KamataEngine::Camera camera_;
 
@@ -54,7 +59,11 @@ private:
 	// ステージ
 	Stage* stage_ = nullptr;
 
+	// パーティクル
 	DeathParticles* deathParticles_ = nullptr;
+
+	// 操作方法
+	Tutorial* tutorial_ = nullptr;
 
 	// 敵の数
 	static inline const int32_t kEnemyNum = 16;

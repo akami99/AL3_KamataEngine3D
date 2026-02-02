@@ -3,6 +3,7 @@
 #include "KamataEngine.h"
 #include "Skydome.h"
 #include "Fade.h"
+#include "Tutorial.h"
 #include <vector>
 
 /// <summary>
@@ -47,6 +48,15 @@ private:
 
 	// フェード
 	Fade* fade_ = nullptr;
+
+	// 操作方法
+	Tutorial* tutorial_ = nullptr;
+
+	// テクスチャハンドル
+	uint32_t tutorialButtonHandle_ = 0;
+
+	// 2Dテクスチャ
+	KamataEngine::Sprite* spriteTutorialButton_ = nullptr;
 
 	// モデル
 	KamataEngine::Model* modelIcon_ = nullptr;

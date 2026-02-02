@@ -109,6 +109,7 @@
   <ItemGroup>
     <ClCompile Include="Camera\CameraController.cpp" />
     <ClCompile Include="Scene\StageSelectScene.cpp" />
+    <ClCompile Include="Scene\Tutorial.cpp" />
     <ClCompile Include="Utility\DeathParticles.cpp" />
     <ClCompile Include="Objects\Door.cpp" />
     <ClCompile Include="Actor\Enemy\Enemy.cpp" />
@@ -203,6 +204,7 @@
   <ItemGroup>
     <ClInclude Include="Camera\CameraController.h" />
     <ClInclude Include="Scene\StageSelectScene.h" />
+    <ClInclude Include="Scene\Tutorial.h" />
     <ClInclude Include="Utility\DeathParticles.h" />
     <ClInclude Include="Objects\Door.h" />
     <ClInclude Include="Actor\Enemy\Enemy.h" />
