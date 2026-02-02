@@ -18,6 +18,7 @@ private:
 	// ゲームのフェーズ（型）
 	enum class Phase {
 		kFadeIn, // フェードイン
+		kStartProduction, // ゲーム開始演出（条件表示・カウントダウン）
 		kPlay,   // ゲームプレイ
 		kDeath,  // デス演出
 		kFadeOut,// フェードアウト
@@ -83,6 +84,30 @@ private:
 
 	// 終了フラグ
 	bool finished_ = false;
+
+	// 開始演出用タイマー
+	float startTimer_ = 0.0f;
+
+	// 演出時間の定義
+	// 0秒～2秒: クリア条件表示
+	// 2秒～5秒: カウントダウン (3, 2, 1)
+	static inline const float kTimeTitleObj = 2.0f; // 目的表示時間
+	static inline const float kTimeCountDown = 3.0f; // カウントダウン時間
+	static inline const float kTimeGo = 1.0f;        // "GO!"を表示する時間
+
+	// テクスチャハンドル
+	uint32_t conditionTextHandle_ = 0;
+	uint32_t count3Handle_ = 0;
+	uint32_t count2Handle_ = 0;
+	uint32_t count1Handle_ = 0;
+	uint32_t goHandle_ = 0;
+
+	// スプライト（モデル）変数の追加などは必要に応じて
+	KamataEngine::Sprite* spriteConditionText_ = nullptr;
+	KamataEngine::Sprite* spriteCount3_ = nullptr;
+	KamataEngine::Sprite* spriteCount2_ = nullptr;
+	KamataEngine::Sprite* spriteCount1_ = nullptr;
+	KamataEngine::Sprite* spriteGo_ = nullptr;
 
 public:
 	// 初期化

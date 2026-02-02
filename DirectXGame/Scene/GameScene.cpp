@@ -15,6 +15,11 @@ void GameScene::Initialize(int stageNo) {
 
 	// ファイル名を指定してテクスチャを読み込む
 	tutorialButtonHandle_ = TextureManager::Load("./Resources/tutorialButton/tutorialButton.png");
+	conditionTextHandle_ = TextureManager::Load("./Resources/startGame/conditionText.png");
+	count3Handle_ = TextureManager::Load("./Resources/startGame/count3.png");
+	count2Handle_ = TextureManager::Load("./Resources/startGame/count2.png");
+	count1Handle_ = TextureManager::Load("./Resources/startGame/count1.png");
+	goHandle_ = TextureManager::Load("./Resources/startGame/go.png");
 
 	// 3Dモデルデータの生成
 	model_ = Model::CreateFromOBJ("player", true);
@@ -27,6 +32,11 @@ void GameScene::Initialize(int stageNo) {
 	modelDoor_ = Model::CreateFromOBJ("door", true);
 
 	spriteTutorialButton_ = Sprite::Create(tutorialButtonHandle_, { 15.0f, 625.0f }, {1.0f, 1.0f, 1.0f, 0.8f});
+	spriteConditionText_ = Sprite::Create(conditionTextHandle_, { 640.0f, 360.0f }, { 1.0f, 1.0f, 1.0f, 0.8f }, {0.5f, 0.5f});
+	spriteCount3_ = Sprite::Create(count3Handle_, { 640.0f, 360.0f }, { 1.0f, 1.0f, 1.0f, 0.8f }, { 0.5f, 0.5f });
+	spriteCount2_ = Sprite::Create(count2Handle_, { 640.0f, 360.0f }, { 1.0f, 1.0f, 1.0f, 0.8f }, { 0.5f, 0.5f });
+	spriteCount1_ = Sprite::Create(count1Handle_, { 640.0f, 360.0f }, { 1.0f, 1.0f, 1.0f, 0.8f }, { 0.5f, 0.5f });
+	spriteGo_ = Sprite::Create(goHandle_, { 640.0f, 360.0f }, { 1.0f, 1.0f, 1.0f, 0.8f }, { 0.5f, 0.5f });
 
 	// カメラの初期化
 	camera_.Initialize();
@@ -77,6 +87,16 @@ void GameScene::Initialize(int stageNo) {
 GameScene::~GameScene() {
 	delete spriteTutorialButton_;
 	spriteTutorialButton_ = nullptr;
+	delete spriteConditionText_;
+	spriteConditionText_ = nullptr;
+	delete spriteCount3_;
+	spriteCount3_ = nullptr;
+	delete spriteCount2_;
+	spriteCount2_ = nullptr;
+	delete spriteCount1_;
+	spriteCount1_ = nullptr;
+	delete spriteGo_;
+	spriteGo_ = nullptr;
 	// フェード用オブジェクトの解放
 	delete fade_;
 	fade_ = nullptr;
@@ -119,7 +139,9 @@ void GameScene::Update() {
 	case Phase::kFadeIn:
 		fade_->Update();           // フェードの更新
 		if (fade_->IsFinished()) { // フェードインが終了したら
-			phase_ = Phase::kPlay;
+			// フェードが終わったら、次は「開始演出」へ
+			phase_ = Phase::kStartProduction;
+			startTimer_ = 0.0f;
 		}
 
 		// カメラの処理
@@ -134,7 +156,21 @@ void GameScene::Update() {
 			// ビュープロジェクション行列の更新と転送
 			camera_.UpdateMatrix();
 		}
-		break;
+		break; 
+	
+	case Phase::kStartProduction:
+			// タイマーを進める
+			startTimer_ += 1.0f / 60.0f;
+
+			// 全ての演出時間（目的 + カウント + GO）が経過したらゲーム開始
+			if (startTimer_ >= kTimeTitleObj + kTimeCountDown + kTimeGo) {
+				phase_ = Phase::kPlay;
+			}
+			// ★重要: ここでは player_->Update() や enemies_.Update() を呼ばない！
+			// カメラの更新だけはしておくと、少しカメラが動く演出などを入れられます
+			camera_.UpdateMatrix();
+			break;
+
 	case Phase::kPlay:
 		// チュートリアル中はゲームの更新を止める場合
 		if (tutorial_->IsActive()) {
@@ -272,6 +308,47 @@ void GameScene::Draw() {
 	Model::PostDraw();
 
 	Sprite::PreDraw(dxCommon->GetCommandList());
+
+	// UIや演出の描画
+	if (phase_ == Phase::kStartProduction) {
+
+		// 前半: 条件テキストの表示
+		if (startTimer_ < kTimeTitleObj) {
+			// 例: 「GOALを目指せ」スプライトを描画
+			spriteConditionText_->Draw(); 
+		}
+		// 後半: カウントダウン
+		else if (startTimer_ < kTimeTitleObj + kTimeCountDown) {
+			// カウントダウン中の経過時間
+			float timerInCount = startTimer_ - kTimeTitleObj;
+			// 残り時間を計算 (3.0 -> 0.0)
+			float restTime = kTimeCountDown - timerInCount;
+
+			// 切り上げで整数にする (3, 2, 1)
+			int count = static_cast<int>(std::ceil(restTime));
+
+			// ※念のため0にならないように補正（計算誤差対策）
+			if (count < 1) count = 1;
+
+			if (count == 3) {
+				// 「3」の画像を描画
+				spriteCount3_->Draw();
+			} else if (count == 2) {
+				// 「2」の画像を描画
+				spriteCount2_->Draw();
+			} else if (count == 1) {
+				// 「1」の画像を描画
+				spriteCount1_->Draw();
+			}
+		}
+		// 最後は「GO!」を表示
+		else {
+			// ここに来るのは、カウントダウンが終わってから kPlay になるまでの1秒間
+			// ここで GO を描画します
+
+			spriteGo_->Draw();
+		}
+	}
 
 	// 操作説明を表示するキー表示
 	spriteTutorialButton_->Draw();
@@ -471,6 +548,12 @@ void GameScene::LoadStage() {
 
 	// 読み込み実行
 	stage_->Load(stageFileName);
+
+	stage_->Update();
+
+	phase_ = Phase::kStartProduction;
+	
+	startTimer_ = 0.0f;
 
 	// カメラのターゲットなどをリセット（必要に応じて）
 	cameraController_->SetTarget(stage_->GetPlayer());
