@@ -4,7 +4,7 @@
 
 using namespace KamataEngine;
 
-void Door::Initialize(Model* model, Camera* camera, const Vector3& position) {
+void Door::Initialize(Model* model, const Vector3& position) {
 #ifdef DEBUG
 
 	// NULLポインタチェック
@@ -17,7 +17,6 @@ void Door::Initialize(Model* model, Camera* camera, const Vector3& position) {
 
 	// 引数の内容をメンバ変数に記録
 	model_ = model;
-	camera_ = camera;
 
 	// ワールド変換の初期化
 	worldTransform_.Initialize();
@@ -29,8 +28,8 @@ void Door::Update() {
 	UpdateWorldTransform(worldTransform_);
 }
 
-void Door::Draw() {
-	model_->Draw(worldTransform_, *camera_);
+void Door::Draw(const Camera& camera) {
+	model_->Draw(worldTransform_, camera);
 }
 
 void Door::OnCollision() {

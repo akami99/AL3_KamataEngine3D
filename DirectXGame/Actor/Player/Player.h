@@ -158,7 +158,7 @@ public:
 	/// <param name="model">モデル</param>
 	/// <param name="textureHandle">テクスチャハンドル</param>
 	/// <param name="camera">カメラ</param>
-	void Initialize(KamataEngine::Model* model, KamataEngine::Model* modelAttack, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
+	void Initialize(KamataEngine::Model* model, KamataEngine::Model* modelAttack, const KamataEngine::Vector3& position);
 
 	/// <summary>
 	/// 更新
@@ -168,7 +168,7 @@ public:
 	/// <summary>
 	/// 描画
 	/// <summary>
-	void Draw();
+	void Draw(const KamataEngine::Camera& camera);
 
 	// 敵本体との衝突通知（既存）
 	void OnCollision(const Enemy* enemy);

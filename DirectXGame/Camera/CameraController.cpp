@@ -3,7 +3,7 @@
 #include "CameraController.h"
 #include "KamataEngine.h"
 #include "EngineMathFunctions.h"
-#include "Player.h"
+#include "Player/Player.h"
 #include <numbers>
 #include <algorithm> // std::clamp
 

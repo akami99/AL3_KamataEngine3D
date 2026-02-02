@@ -1,8 +1,9 @@
-#include <Windows.h>
-//#include "KamataEngine.h"
-#include "TitleScene.h"
-#include "GameScene.h"
 #include "GameClearScene.h"
+#include "GameScene.h"
+#include "KamataEngine.h"
+#include "StageSelectScene.h"
+#include "TitleScene.h"
+#include <Windows.h>
 
 using namespace KamataEngine;
 
@@ -12,6 +13,7 @@ enum class Scene {
 	kUnknown = 0,
 
 	kTitle,
+	kStageSelect,
 	kGame,
 	kClear,
 };
@@ -21,6 +23,7 @@ Scene scene = Scene::kUnknown;
 
 GameScene* gameScene = nullptr;
 TitleScene* titleScene = nullptr;
+StageSelectScene* stageSelectScene = nullptr;
 GameClearScene* gameClearScene = nullptr;
 
 void ChangeScene();
@@ -31,7 +34,7 @@ void DrawScene();
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-	
+
 	// エンジンの初期化
 	KamataEngine::Initialize(L"LE2B_01_アカミネ_レン_ウツリハガネ");
 
@@ -40,9 +43,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 最初のシーンの初期化
 #ifdef _DEBUG
-	scene = Scene::kGame;
+	/*scene = Scene::kGame;
 	gameScene = new GameScene;
-	gameScene->Initialize();
+	gameScene->Initialize(1);*/
+	scene = Scene::kStageSelect;
+	stageSelectScene = new StageSelectScene;
+	stageSelectScene->Initialize();
 #else
 	scene = Scene::kTitle;
 	titleScene = new TitleScene;
@@ -69,13 +75,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 描画終了
 		dxCommon->PostDraw();
-
 	}
 	// 終了時、シーンオブジェクトが残っていたら解放する
 	// タイトルシーンの解放
 	if (titleScene) {
 		delete titleScene;
 		titleScene = nullptr;
+	}
+	if (stageSelectScene) {
+		delete stageSelectScene;
+		stageSelectScene = nullptr;
 	}
 	// ゲームシーンの解放
 	if (gameScene) {
@@ -99,26 +108,42 @@ void ChangeScene() {
 	case Scene::kTitle:
 		if (titleScene->IsFinished()) {
 			// シーン変更
-			scene = Scene::kGame;
+			scene = Scene::kStageSelect;
 			// 旧シーンの解放
 			delete titleScene;
 			titleScene = nullptr;
 			// 新シーンの生成と初期化
-			gameScene = new GameScene;
-			gameScene->Initialize();
+			stageSelectScene = new StageSelectScene;
+			stageSelectScene->Initialize();
 		}
 		break;
+
+	case Scene::kStageSelect:
+		if (stageSelectScene->IsFinished()) {
+			// 選択されたステージ番号を取得
+			int stageNo = stageSelectScene->GetSelectedStageNo();
+
+			// ステージ選択 -> ゲームへ
+			scene = Scene::kGame;
+			delete stageSelectScene;
+			stageSelectScene = nullptr;
+
+			gameScene = new GameScene;
+			gameScene->Initialize(stageNo); // 選んだステージ番号を渡す
+		}
+		break;
+
 	case Scene::kGame:
 		if (gameScene->IsFinished()) {
 			if (gameScene->IsPlayerDead()) {
 				// シーン変更
-				scene = Scene::kGame;
+				scene = Scene::kStageSelect;
 				// 旧シーンの解放
 				delete gameScene;
 				gameScene = nullptr;
 				// 新シーンの生成と初期化
-				gameScene = new GameScene;
-				gameScene->Initialize();
+				stageSelectScene = new StageSelectScene;
+				stageSelectScene->Initialize();
 			} else {
 				// シーン変更
 				scene = Scene::kClear;
@@ -151,6 +176,11 @@ void UpdateScene() {
 	case Scene::kTitle:
 		titleScene->Update();
 		break;
+	case Scene::kStageSelect:
+		if (stageSelectScene) {
+			stageSelectScene->Update();
+		}
+		break;
 	case Scene::kGame:
 		gameScene->Update();
 		break;
@@ -163,13 +193,24 @@ void UpdateScene() {
 void DrawScene() {
 	switch (scene) {
 	case Scene::kTitle:
-		titleScene->Draw();
+		if (titleScene) {
+			titleScene->Draw();
+		}
+		break;
+	case Scene::kStageSelect:
+		if (stageSelectScene) {
+			stageSelectScene->Draw();
+		}
 		break;
 	case Scene::kGame:
-		gameScene->Draw();
+		if (gameScene) {
+			gameScene->Draw();
+		}
 		break;
 	case Scene::kClear:
-		gameClearScene->Draw();
+		if (gameClearScene) {
+			gameClearScene->Draw();
+		}
 		break;
 	}
 }

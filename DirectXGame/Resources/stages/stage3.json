@@ -1,0 +1,102 @@
+{
+  "objects": [
+    {
+      "type": "FLOOR",
+      "translation": [ 20.0, 0.0, 20.0 ],
+      "scaling": [ 40.0, 1.0, 40.0 ]
+    },
+    {
+      "type": "BLOCK",
+      "translation": [ 20.0, 1.5, 40.5 ],
+      "scaling": [ 40.0, 2.0, 1.0 ],
+      "rotation": [ 0.0, 0.0, 0.0 ]
+    },
+    {
+      "type": "BLOCK",
+      "translation": [ 20.0, 1.5, -0.5 ],
+      "scaling": [ 40.0, 2.0, 1.0 ],
+      "rotation": [ 0.0, 0.0, 0.0 ]
+    },
+    {
+      "type": "BLOCK",
+      "translation": [ 40.5, 1.5, 20.0 ],
+      "scaling": [ 1.0, 2.0, 40.0 ],
+      "rotation": [ 0.0, 0.0, 0.0 ]
+    },
+    {
+      "type": "BLOCK",
+      "translation": [ -0.5, 1.5, 20.0 ],
+      "scaling": [ 1.0, 2.0, 40.0 ],
+      "rotation": [ 0.0, 0.0, 0.0 ]
+    },
+
+    {
+      "type": "BLOCK",
+      "translation": [ 12.0, 1.5, 12.0 ],
+      "scaling": [ 2.0, 2.0, 2.0 ],
+      "rotation": [ 0.0, 0.0, 0.0 ]
+    },
+    {
+      "type": "BLOCK",
+      "translation": [ 28.0, 1.5, 12.0 ],
+      "scaling": [ 2.0, 2.0, 2.0 ],
+      "rotation": [ 0.0, 0.0, 0.0 ]
+    },
+    {
+      "type": "BLOCK",
+      "translation": [ 12.0, 1.5, 28.0 ],
+      "scaling": [ 2.0, 2.0, 2.0 ],
+      "rotation": [ 0.0, 0.0, 0.0 ]
+    },
+    {
+      "type": "BLOCK",
+      "translation": [ 28.0, 1.5, 28.0 ],
+      "scaling": [ 2.0, 2.0, 2.0 ],
+      "rotation": [ 0.0, 0.0, 0.0 ]
+    },
+
+    {
+      "type": "PLAYER",
+      "translation": [ 20.0, 1.0, 5.0 ],
+      "scaling": [ 1.0, 1.0, 1.0 ],
+      "rotation": [ 0.0, 0.0, 0.0 ]
+    },
+    {
+      "type": "DOOR",
+      "translation": [ 20.0, 1.0, 35.0 ],
+      "scaling": [ 1.0, 1.0, 1.0 ],
+      "rotation": [ 0.0, 0.0, 0.0 ]
+    },
+
+    {
+      "type": "ENEMY",
+      "translation": [ 10.0, 1.0, 20.0 ],
+      "param": "SHOOT"
+    },
+    {
+      "type": "ENEMY",
+      "translation": [ 30.0, 1.0, 20.0 ],
+      "param": "SHOOT"
+    },
+    {
+      "type": "ENEMY",
+      "translation": [ 18.0, 1.0, 25.0 ],
+      "param": "WALK"
+    },
+    {
+      "type": "ENEMY",
+      "translation": [ 22.0, 1.0, 25.0 ],
+      "param": "WALK"
+    },
+    {
+      "type": "ENEMY",
+      "translation": [ 10.0, 1.0, 35.0 ],
+      "param": "WALK"
+    },
+    {
+      "type": "ENEMY",
+      "translation": [ 30.0, 1.0, 35.0 ],
+      "param": "WALK"
+    }
+  ]
+}

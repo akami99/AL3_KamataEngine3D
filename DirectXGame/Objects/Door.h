@@ -2,7 +2,7 @@
 
 #include "KamataEngine.h"
 #include "EngineMath.h"
-#include "Player.h"
+#include "Player/Player.h"
 
 class Door {
 private:
@@ -20,7 +20,7 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
+	void Initialize(KamataEngine::Model* model, const KamataEngine::Vector3& position);
 
 	/// <summary>
 	/// 更新
@@ -30,7 +30,7 @@ public:
 	/// <summary>
 	/// 描画
 	/// <summary>
-	void Draw();
+	void Draw(const KamataEngine::Camera& camera);
 
 	// 衝突応答
 	void OnCollision();

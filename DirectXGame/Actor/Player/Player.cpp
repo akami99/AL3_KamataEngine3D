@@ -32,7 +32,7 @@ float LerpShortestAngle(float a, float b, float t) {
 	return a + diff * t;
 }
 
-void Player::Initialize(Model* model, Model* modelAttack, Camera* camera, const Vector3& position) {
+void Player::Initialize(Model* model, Model* modelAttack, const Vector3& position) {
 #ifdef _DEBUG
 
 	// NULLポインタチェック
@@ -45,7 +45,6 @@ void Player::Initialize(Model* model, Model* modelAttack, Camera* camera, const 
 	// 引数の内容をメンバ変数に記録
 	model_ = model;
 	modelAttack_ = modelAttack;
-	camera_ = camera;
 
 	// ワールド変換の初期化
 	worldTransform_.Initialize();
@@ -97,13 +96,13 @@ void Player::Update() {
 	}
 }
 
-void Player::Draw() {
+void Player::Draw(const Camera& camera) {
 	// 3Dモデルを描画
-	model_->Draw(worldTransform_, *camera_);
+	model_->Draw(worldTransform_, camera);
 
 	if (attackPhase_ == AttackPhase::Rush) {
 		// 攻撃エフェクトモデルを描画
-		modelAttack_->Draw(worldTransformAttack_, *camera_);
+		modelAttack_->Draw(worldTransformAttack_, camera);
 	}
 }
 

@@ -24,7 +24,7 @@ public:
 	/// <param name="textureHandle">テクスチャハンドル</param>
 	/// <param name="camera">カメラ</param>
 	/// <param name="position">初期位置</param>
-	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position, Type type = Type::kWark);
+	void Initialize(KamataEngine::Model* model, const KamataEngine::Vector3& position, Type type = Type::kWark);
 
 	/// <summary>
 	/// 更新
@@ -34,11 +34,11 @@ public:
 	/// <summary>
 	/// 描画
 	/// <summary>
-	void Draw();
+	void Draw(const KamataEngine::Camera& camera);
 
 	// プレイヤー情報をセット
 	void SetPlayer(Player* player) { player_ = player; }
-
+	// 弾のモデルをセット
 	void SetBulletModel(KamataEngine::Model* model) { bulletModel_ = model; }
 
 	// 衝突応答
@@ -77,8 +77,6 @@ private:
 	KamataEngine::WorldTransform worldTransform_;
 	// モデル
 	KamataEngine::Model* model_ = nullptr;
-	// カメラ
-	KamataEngine::Camera* camera_ = nullptr;
 	// プレイヤー
 	Player* player_ = nullptr;
 

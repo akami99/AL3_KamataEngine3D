@@ -1,6 +1,6 @@
 #include "Enemy.h"
 #include "EngineMathFunctions.h"
-#include "Player.h"
+#include "Player/Player.h"
 #include "WorldTransform.h"
 #include <cmath>
 #include <numbers>
@@ -15,7 +15,7 @@ Enemy::~Enemy() {
 	bullets_.clear();
 }
 
-void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position, Type type) {
+void Enemy::Initialize(Model* model, const Vector3& position, Type type) {
 #ifdef _DEBUG
 
 	// NULLポインタチェック
@@ -28,7 +28,6 @@ void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position, Ty
 
 	// 引数の内容をメンバ変数に記録
 	model_ = model;
-	camera_ = camera;
 	type_ = type;
 
 	// ワールド変換の初期化
@@ -78,13 +77,13 @@ void Enemy::Update() {
 	UpdateWorldTransform(worldTransform_);
 }
 
-void Enemy::Draw() {
+void Enemy::Draw(const Camera& camera) {
 	// 3Dモデルを描画
-	model_->Draw(worldTransform_, *camera_);
+	model_->Draw(worldTransform_, camera);
 
 	// 弾の描画
 	for (EnemyBullet* bullet : bullets_) {
-		bullet->Draw(*camera_);
+		bullet->Draw(camera);
 	}
 }
 
